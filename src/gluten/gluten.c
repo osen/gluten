@@ -30,6 +30,25 @@ int GnInit(int argc, char **argv, char *layout)
 
   GnUnsafe.buffer = SDL_DisplayFormatAlpha(GnUnsafe.screen);
 #endif
+#ifdef USE_X11
+  GnUnsafe.display = XOpenDisplay(NULL);
+
+  if(!GnUnsafe.display)
+  {
+    return 1;
+  }
+
+  GnUnsafe.screen = DefaultScreen(GnUnsafe.display);
+
+  GnUnsafe.window = XCreateSimpleWindow(GnUnsafe.display,
+    RootWindow(GnUnsafe.display, GnUnsafe.screen),
+    0, 0, GN_INITIAL_WIDTH, GN_INITIAL_HEIGHT, 1,
+    BlackPixel(GnUnsafe.display, GnUnsafe.screen),
+    WhitePixel(GnUnsafe.display, GnUnsafe.screen));
+
+  XSelectInput(GnUnsafe.display, GnUnsafe.window, ExposureMask | KeyPressMask);
+  XMapWindow(GnUnsafe.display, GnUnsafe.window);
+#endif
 
   GnInternal.forms = vector_new(GnWidget *);
 
@@ -97,6 +116,36 @@ void GnRun()
     SDL_Flip(GnUnsafe.screen);
   }
 #endif
+#ifdef USE_X11
+  do {
+  Atom wmDeleteMessage = XInternAtom(GnUnsafe.display,
+    "WM_DELETE_WINDOW", False);
+  XSetWMProtocols(GnUnsafe.display, GnUnsafe.window, &wmDeleteMessage, 1);
+
+  while(GnInternal.running)
+  {
+    XEvent e = {0};
+
+    XNextEvent(GnUnsafe.display, &e);
+
+    if(e.type == Expose)
+    {
+
+    }
+    else if(e.type == KeyPress)
+    {
+      GnInternal.running = 0;
+    }
+    else if(e.type == ClientMessage)
+    {
+      if(e.xclient.data.l[0] == wmDeleteMessage)
+      {
+        GnInternal.running = 0;
+      }
+    }
+  }
+  } while(0);
+#endif
 }
 
 void GnCleanup()
@@ -115,6 +164,9 @@ void GnCleanup()
 #ifdef USE_SDL
   SDL_FreeSurface(GnUnsafe.buffer);
   SDL_Quit();
+#endif
+#ifdef USE_X11
+  XCloseDisplay(GnUnsafe.display);
 #endif
 
   memset(&GnInternal, 0, sizeof(GnInternal));

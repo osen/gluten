@@ -17,6 +17,9 @@
 #ifdef USE_SDL
   #include <SDL/SDL.h>
 #endif
+#ifdef USE_X11
+  #include <X11/Xlib.h>
+#endif
 
 typedef struct GnObject GnEvent;
 
@@ -36,6 +39,11 @@ struct GnUnsafe
 #ifdef USE_SDL
   SDL_Surface *screen;
   SDL_Surface *buffer;
+#endif
+#ifdef USE_X11
+  Display *display;
+  int screen;
+  Window window;
 #endif
 };
 extern struct GnUnsafe GnUnsafe;

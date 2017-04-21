@@ -2,6 +2,7 @@
 #define GLUTEN_CONFIG_H
 
 #define USE_SDL
+//#define USE_X11
 
 #define GN_FORM_BACKGROUND 250, 250, 250
 #define GN_WIDGET_BACKGROUND 100, 100, 200

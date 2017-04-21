@@ -43,7 +43,7 @@ cat src/palloc/palloc.c >> gluten.c
 cat src/palloc/vector.c >> gluten.c
 
 CFLAGS="-g -Wall -pedantic -I/usr/local/include"
-LDFLAGS="-L/usr/local/lib -lSDL"
+LDFLAGS="-L/usr/local/lib -lSDL -lX11"
 
 echo "Building amalgamation examples"
 cc -o bin/login_example_amalgamation $CFLAGS -I. *.c src/login_example/*.c $LDFLAGS
