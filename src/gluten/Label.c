@@ -25,6 +25,8 @@ void GnLabelDraw(GnWidget *ctx, GnEvent *event)
 
   SDL_FillRect(GnUnsafe.screen, &r,
     SDL_MapRGB(GnUnsafe.screen->format, GN_WIDGET_FOREGROUND));
+
+  SDL_BlitSurface(GnInternal.mediumMono->surface, NULL, GnUnsafe.screen, &r);
 #endif
 }
 

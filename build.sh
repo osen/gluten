@@ -1,3 +1,10 @@
+mkdir -p bin
+
+cc -o bin/bin2c src/bin2c/*.c
+
+echo -n "" > src/gluten/data.h
+bin/bin2c resources/fonts/mediumMono.png mediumMono >> src/gluten/data.h
+
 echo -n "" > gluten.h
 echo "#ifndef GLUTEN_AMALGAMATION_H" >> gluten.h
 echo "#define GLUTEN_AMALGAMATION_H" >> gluten.h
@@ -34,8 +41,6 @@ cat src/gluten/util.c >> gluten.c
 cat src/lodepng/lodepng.c >> gluten.c
 cat src/palloc/palloc.c >> gluten.c
 cat src/palloc/vector.c >> gluten.c
-
-mkdir -p bin
 
 CFLAGS="-g -Wall -pedantic -I/usr/local/include"
 LDFLAGS="-L/usr/local/lib -lSDL"

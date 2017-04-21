@@ -32,6 +32,7 @@ extern struct GnInternal GnInternal;
 struct GnUnsafe
 {
   int dummy;
+  unsigned char *pngData;
 #ifdef USE_SDL
   SDL_Surface *screen;
 #endif

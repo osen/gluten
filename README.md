@@ -7,7 +7,7 @@ Gluten provides not only a powerful GUI library but also a complete inbuilt layo
   - **Easy to integrate** - Only a single .h and .c file need to be added to your project.
   - **Standard C** - Compiles with any ANSI C89 compiler or newer.
   - **Extremely portable** - Compiles on any platform providing *X11* or *SDL*.
-  - **Extensible** - Using the underlying component entity system, new widgets can be easily added.
+  - **Extensible** - Using the underlying component entity system, new widgets can be added easily.
 
 # Add a GUI in just a few lines of code!
 

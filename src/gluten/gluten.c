@@ -103,6 +103,8 @@ void GnCleanup()
 
   vector_delete(GnInternal.forms);
 
+  GnImageDestroy(GnInternal.mediumMono);
+
 #ifdef USE_SDL
   SDL_Quit();
 #endif

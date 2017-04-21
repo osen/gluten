@@ -12,7 +12,7 @@ void GnHexArrayFromString(char *input, vector(unsigned char) *output)
 
   for(i = 0; i < len - 1; i+=2)
   {
-    char num[2] = {0};
+    char num[3] = {0};
 
     num[0] = input[i];
     num[1] = input[i + 1];
