@@ -17,6 +17,8 @@
 
 #include <stdlib.h>
 
+//#define PALLOC_DEBUG
+
 void pool_cleanup();
 void pfree(void *ptr);
 void *_palloc(size_t size, char *type);

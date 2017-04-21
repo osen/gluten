@@ -1,6 +1,6 @@
 mkdir -p bin
 
-cc -o bin/bin2c src/bin2c/*.c
+cc -o bin/bin2c -Isrc/palloc src/bin2c/*.c src/palloc/*.c
 
 echo -n "" > src/gluten/data.h
 bin/bin2c resources/fonts/mediumMono.png mediumMono >> src/gluten/data.h

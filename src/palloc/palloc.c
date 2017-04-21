@@ -57,7 +57,9 @@ void pfree(void *ptr)
         printf("Error: Memory already freed\n");
       }
 
+#ifdef PALLOC_DEBUG
       printf("Freeing: %s\n", entry->type);
+#endif
       memset(entry->ptr, 0, entry->size);
       entry->used = 0;
       return;
@@ -86,7 +88,9 @@ void *_palloc(size_t size, char *type)
       char *ptr = (char *)entry->ptr;
       size_t i = 0;
 
+#ifdef PALLOC_DEBUG
       printf("Reusing: %s\n", type);
+#endif
 
       for(i = 0; i < entry->size; i++)
       {
@@ -106,7 +110,9 @@ void *_palloc(size_t size, char *type)
     entry = entry->next;
   }
 
+#ifdef PALLOC_DEBUG
   printf("Allocating: %s\n", type);
+#endif
   entry = calloc(1, sizeof(*entry));
   if(!entry) return NULL;
 

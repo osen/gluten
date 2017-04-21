@@ -1,8 +1,12 @@
+#include <vector.h>
+
 #include <stdio.h>
 
 int main(int argc, char *argv[])
 {
   FILE *fin = NULL;
+  vector(char) *output = NULL;
+  size_t count = 0;
 
   if(argc < 3)
   {
@@ -20,7 +24,7 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  printf("char *%s = \"", argv[2]);
+  output = vector_new(char);
 
   while(1)
   {
@@ -33,12 +37,30 @@ int main(int argc, char *argv[])
 
     for(i = 0; i < nb; i++)
     {
-      printf("%02x", buffer[i]);
+      char sb[3] = {0};
+
+      sprintf(sb, "%02x", buffer[i]);
+
+      count+=2;
+      vector_push_back(output, '\'');
+      vector_push_back(output, sb[0]);
+      vector_push_back(output, '\'');
+      vector_push_back(output, ',');
+      vector_push_back(output, '\'');
+      vector_push_back(output, sb[1]);
+      vector_push_back(output, '\'');
+      vector_push_back(output, ',');
     }
   }
 
-  printf("\";\n");
+  count++;
+  vector_push_back(output, '0');
+  printf("char %s[%i] = {", argv[2], (int)count);
 
+  printf("%s", vector_raw(output));
+  printf("};\n");
+
+  vector_delete(output);
   fclose(fin);
 
   return 0;
