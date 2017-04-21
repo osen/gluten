@@ -48,6 +48,9 @@ void _VectorDelete(void *_vh, void *_v);
 #define vector_at(V, I) \
   (_VectorOobAssert(V[0], I) ? V[1][I] : V[1][I])
 
+#define vector_raw(V) \
+  V[1]
+
 #define vector_push_back(V, D) \
   do { \
     vector_resize(V, vector_size(V) + 1); \

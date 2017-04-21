@@ -75,6 +75,9 @@ void _VectorDelete(void *_vh, void *_v);
 #define vector_at(V, I) \
   (_VectorOobAssert(V[0], I) ? V[1][I] : V[1][I])
 
+#define vector_raw(V) \
+  V[1]
+
 #define vector_push_back(V, D) \
   do { \
     vector_resize(V, vector_size(V) + 1); \
@@ -1997,6 +2000,33 @@ struct GnForm
 };
 
 #endif
+#ifndef GLUTEN_IMAGE_H
+#define GLUTEN_IMAGE_H
+
+#ifndef AMALGAMATION
+  #include <vector.h>
+#endif
+
+typedef struct GnImage GnImage;
+
+struct GnImage
+{
+  vector(unsigned char) *rawData;
+};
+
+GnImage *GnImageCreateFromString(char *str);
+
+#endif
+#ifndef GLUTEN_UTIL_H
+#define GLUTEN_UTIL_H
+
+#ifndef AMALGAMATION
+  #include <vector.h>
+#endif
+
+void GnHexArrayFromString(char *input, vector(unsigned char) *output);
+
+#endif
 #ifndef GLUTEN_GLUTEN_H
 #define GLUTEN_GLUTEN_H
 
@@ -2009,6 +2039,7 @@ struct GnForm
   #include "Form.h"
   #include "Button.h"
   #include "Label.h"
+  #include "Image.h"
   #include <vector.h>
 #endif
 
@@ -2022,6 +2053,7 @@ struct GnInternal
 {
   int running;
   vector(GnWidget *) *forms;
+  GnImage *mediumMono;
   GnWidget *activeForm;
 };
 extern struct GnInternal GnInternal;

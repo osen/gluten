@@ -10,6 +10,7 @@
   #include "Form.h"
   #include "Button.h"
   #include "Label.h"
+  #include "Image.h"
   #include <vector.h>
 #endif
 
@@ -23,6 +24,7 @@ struct GnInternal
 {
   int running;
   vector(GnWidget *) *forms;
+  GnImage *mediumMono;
   GnWidget *activeForm;
 };
 extern struct GnInternal GnInternal;

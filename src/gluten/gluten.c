@@ -1,15 +1,14 @@
 #ifndef AMALGAMATION
   #include "gluten.h"
+  #include "data.h"
   #include "Position.h"
-  #include "palloc.h"
+  #include <palloc.h>
 #endif
 
 #include <string.h>
 
 #define GN_INITIAL_WIDTH 320
 #define GN_INITIAL_HEIGHT 240
-
-char *mediumMono = "0210FFEB";
 
 struct GnInternal GnInternal;
 struct GnUnsafe GnUnsafe;
@@ -32,6 +31,8 @@ int GnInit(int argc, char **argv, char *layout)
 
   GnInternal.forms = vector_new(GnWidget *);
 
+  GnInternal.mediumMono = GnImageCreateFromString(mediumMono);
+
   /*GnRun();*/
 
   return 0;
@@ -49,22 +50,6 @@ void GnPropagateEvent(char *event)
   for(i = 0; i < vector_size(GnInternal.forms); i++)
   {
     GnWidgetEvent(vector_at(GnInternal.forms, i), event, NULL);
-  }
-}
-
-void GnHexArrayFromString(char *input, vector(unsigned char) *output)
-{
-  size_t len = strlen(input);
-  size_t i = 0;
-
-  for(i = 0; i < len - 1; i+=2)
-  {
-    char num[2] = {0};
-
-    num[0] = input[i];
-    num[1] = input[i + 1];
-
-    vector_push_back(output, strtoul(num, NULL, 16));
   }
 }
 

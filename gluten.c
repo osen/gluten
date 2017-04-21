@@ -309,6 +309,40 @@ void GnFormInit(GnWidget *ctx, GnEvent *event)
 }
 
 #ifndef AMALGAMATION
+  #include "Image.h"
+  #include "util.h"
+  #include <lodepng/lodepng.h>
+  #include <palloc.h>
+#endif
+
+GnImage *GnImageCreateFromString(char *str)
+{
+  GnImage *rtn = NULL;
+  unsigned error = 0;
+  unsigned width = 0;
+  unsigned height = 0;
+  unsigned char *data = NULL;
+
+  rtn = palloc(GnImage);
+  rtn->rawData = vector_new(unsigned char);
+
+  GnHexArrayFromString(str, rtn->rawData);
+
+  error = lodepng_decode32(&data, &width, &height, vector_raw(rtn->rawData), vector_size(rtn->rawData));
+
+  if(error)
+  {
+    /* printf("error %u: %s\n", error, lodepng_error_text(error)); */
+    vector_delete(rtn->rawData);
+    pfree(rtn);
+    return NULL;
+  }
+
+  printf("Image: %i %i\n", width, height);
+
+  return rtn;
+}
+#ifndef AMALGAMATION
   #include "Position.h"
   #include "Widget.h"
 #endif
@@ -335,18 +369,18 @@ void GnWidgetSetSize(GnWidget *ctx, int width, int height)
   position->height = height;
 }
 
+char *mediumMono = "0210FFEB";
 #ifndef AMALGAMATION
   #include "gluten.h"
+  #include "data.h"
   #include "Position.h"
-  #include "palloc.h"
+  #include <palloc.h>
 #endif
 
 #include <string.h>
 
 #define GN_INITIAL_WIDTH 320
 #define GN_INITIAL_HEIGHT 240
-
-char *mediumMono = "0210FFEB";
 
 struct GnInternal GnInternal;
 struct GnUnsafe GnUnsafe;
@@ -369,6 +403,8 @@ int GnInit(int argc, char **argv, char *layout)
 
   GnInternal.forms = vector_new(GnWidget *);
 
+  GnInternal.mediumMono = GnImageCreateFromString(mediumMono);
+
   /*GnRun();*/
 
   return 0;
@@ -386,22 +422,6 @@ void GnPropagateEvent(char *event)
   for(i = 0; i < vector_size(GnInternal.forms); i++)
   {
     GnWidgetEvent(vector_at(GnInternal.forms, i), event, NULL);
-  }
-}
-
-void GnHexArrayFromString(char *input, vector(unsigned char) *output)
-{
-  size_t len = strlen(input);
-  size_t i = 0;
-
-  for(i = 0; i < len - 1; i+=2)
-  {
-    char num[2] = {0};
-
-    num[0] = input[i];
-    num[1] = input[i + 1];
-
-    vector_push_back(output, strtoul(num, NULL, 16));
   }
 }
 
@@ -463,6 +483,28 @@ void GnCleanup()
   memset(&GnUnsafe, 0, sizeof(GnUnsafe));
 }
 
+#ifndef AMALGAMATION
+  #include "util.h"
+#endif
+
+#include <stdlib.h>
+#include <string.h>
+
+void GnHexArrayFromString(char *input, vector(unsigned char) *output)
+{
+  size_t len = strlen(input);
+  size_t i = 0;
+
+  for(i = 0; i < len - 1; i+=2)
+  {
+    char num[2] = {0};
+
+    num[0] = input[i];
+    num[1] = input[i + 1];
+
+    vector_push_back(output, strtoul(num, NULL, 16));
+  }
+}
 /*
 LodePNG version 20161127
 
