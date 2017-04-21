@@ -22,16 +22,16 @@ void GnButtonDraw(GnWidget *ctx, GnEvent *event)
   r.w = position->width;
   r.h = position->height;
 
-  SDL_FillRect(GnUnsafe.screen, &r,
-    SDL_MapRGB(GnUnsafe.screen->format, GN_WIDGET_BORDER));
+  SDL_FillRect(GnUnsafe.buffer, &r,
+    SDL_MapRGB(GnUnsafe.buffer->format, GN_WIDGET_BORDER));
 
   r.x++;
   r.y++;
   r.w-=2;
   r.h-=2;
 
-  SDL_FillRect(GnUnsafe.screen, &r,
-    SDL_MapRGB(GnUnsafe.screen->format, GN_WIDGET_BACKGROUND));
+  SDL_FillRect(GnUnsafe.buffer, &r,
+    SDL_MapRGB(GnUnsafe.buffer->format, GN_WIDGET_BACKGROUND));
 #endif
 }
 

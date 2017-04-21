@@ -20,8 +20,8 @@ void GnFormSize(GnWidget *ctx, GnEvent *event)
 void GnFormDraw(GnWidget *ctx, GnEvent *event)
 {
 #ifdef USE_SDL
-  SDL_FillRect(GnUnsafe.screen, &GnUnsafe.screen->clip_rect,
-    SDL_MapRGB(GnUnsafe.screen->format, GN_FORM_BACKGROUND));
+  SDL_FillRect(GnUnsafe.buffer, &GnUnsafe.screen->clip_rect,
+    SDL_MapRGB(GnUnsafe.buffer->format, GN_FORM_BACKGROUND));
 #endif
 }
 

@@ -25,6 +25,7 @@ GnImage *GnImageCreateFromString(char *str)
   int x = 0;
   int y = 0;
   size_t i = 0;
+  int colorMod[3] = {GN_WIDGET_FOREGROUND};
 
   rtn = palloc(GnImage);
   rtn->rawData = vector_new(unsigned char);
@@ -54,10 +55,10 @@ GnImage *GnImageCreateFromString(char *str)
 
 #ifdef USE_SDL
   rtn->surface = SDL_CreateRGBSurface(0, width, height, 32,
-    GnUnsafe.screen->format->Rmask,
-    GnUnsafe.screen->format->Gmask,
-    GnUnsafe.screen->format->Bmask,
-    GnUnsafe.screen->format->Amask);
+    GnUnsafe.buffer->format->Rmask,
+    GnUnsafe.buffer->format->Gmask,
+    GnUnsafe.buffer->format->Bmask,
+    GnUnsafe.buffer->format->Amask);
 
   i = 0;
 
@@ -65,7 +66,8 @@ GnImage *GnImageCreateFromString(char *str)
   {
     for(x = 0; x < width; x++)
     {
-      set_pixel(rtn->surface, x, y, SDL_MapRGBA(rtn->surface->format, GnUnsafe.pngData[i], GnUnsafe.pngData[i+1], GnUnsafe.pngData[i+2], GnUnsafe.pngData[i+3]));
+      set_pixel(rtn->surface, x, y, SDL_MapRGBA(rtn->surface->format,
+        GnUnsafe.pngData[i] + colorMod[0], GnUnsafe.pngData[i+1] + colorMod[1], GnUnsafe.pngData[i+2] + colorMod[2], GnUnsafe.pngData[i+3]));
       i+=4;
     }
   }

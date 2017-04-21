@@ -27,6 +27,8 @@ int GnInit(int argc, char **argv, char *layout)
   {
     return 1;
   }
+
+  GnUnsafe.buffer = SDL_DisplayFormatAlpha(GnUnsafe.screen);
 #endif
 
   GnInternal.forms = vector_new(GnWidget *);
@@ -78,6 +80,8 @@ void GnRun()
         break;
       }
 
+      SDL_FreeSurface(GnUnsafe.buffer);
+      GnUnsafe.buffer = SDL_DisplayFormatAlpha(GnUnsafe.screen);
       GnPropagateEvent("size");
     }
     else if(event.type == SDL_QUIT)
@@ -87,6 +91,9 @@ void GnRun()
     }
 
     GnPropagateEvent("draw");
+
+    SDL_BlitSurface(GnUnsafe.buffer, NULL, GnUnsafe.screen, NULL);
+
     SDL_Flip(GnUnsafe.screen);
   }
 #endif
@@ -106,6 +113,7 @@ void GnCleanup()
   GnImageDestroy(GnInternal.mediumMono);
 
 #ifdef USE_SDL
+  SDL_FreeSurface(GnUnsafe.buffer);
   SDL_Quit();
 #endif
 

@@ -7,7 +7,7 @@
 
 #define GN_FORM_BACKGROUND 250, 250, 250
 #define GN_WIDGET_BACKGROUND 100, 100, 200
-#define GN_WIDGET_FOREGROUND 200, 200, 200
+#define GN_WIDGET_FOREGROUND 150, 200, 150
 #define GN_WIDGET_BORDER 100, 100, 150
 
 #endif
@@ -2077,6 +2077,7 @@ struct GnUnsafe
   unsigned char *pngData;
 #ifdef USE_SDL
   SDL_Surface *screen;
+  SDL_Surface *buffer;
 #endif
 };
 extern struct GnUnsafe GnUnsafe;

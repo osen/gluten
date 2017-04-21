@@ -17,16 +17,23 @@ void GnLabelDraw(GnWidget *ctx, GnEvent *event)
   GnPosition *position = GnWidgetComponent(ctx, GnPosition);
 
 #ifdef USE_SDL
+/*
   SDL_Rect r = {0};
   r.x = position->x + 5;
   r.y = position->y + 5;
   r.w = position->width - 10;
   r.h = position->height - 10;
 
-  SDL_FillRect(GnUnsafe.screen, &r,
-    SDL_MapRGB(GnUnsafe.screen->format, GN_WIDGET_FOREGROUND));
+  SDL_FillRect(GnUnsafe.buffer, &r,
+    SDL_MapRGB(GnUnsafe.buffer->format, GN_WIDGET_FOREGROUND));
+*/
+  SDL_Rect r = {0};
+  r.x = position->x;
+  r.y = position->y;
+  r.w = position->width;
+  r.h = position->height;
 
-  SDL_BlitSurface(GnInternal.mediumMono->surface, NULL, GnUnsafe.screen, &r);
+  SDL_BlitSurface(GnInternal.mediumMono->surface, NULL, GnUnsafe.buffer, &r);
 #endif
 }
 

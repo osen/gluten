@@ -35,6 +35,7 @@ struct GnUnsafe
   unsigned char *pngData;
 #ifdef USE_SDL
   SDL_Surface *screen;
+  SDL_Surface *buffer;
 #endif
 };
 extern struct GnUnsafe GnUnsafe;

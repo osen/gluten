@@ -181,16 +181,16 @@ void GnButtonDraw(GnWidget *ctx, GnEvent *event)
   r.w = position->width;
   r.h = position->height;
 
-  SDL_FillRect(GnUnsafe.screen, &r,
-    SDL_MapRGB(GnUnsafe.screen->format, GN_WIDGET_BORDER));
+  SDL_FillRect(GnUnsafe.buffer, &r,
+    SDL_MapRGB(GnUnsafe.buffer->format, GN_WIDGET_BORDER));
 
   r.x++;
   r.y++;
   r.w-=2;
   r.h-=2;
 
-  SDL_FillRect(GnUnsafe.screen, &r,
-    SDL_MapRGB(GnUnsafe.screen->format, GN_WIDGET_BACKGROUND));
+  SDL_FillRect(GnUnsafe.buffer, &r,
+    SDL_MapRGB(GnUnsafe.buffer->format, GN_WIDGET_BACKGROUND));
 #endif
 }
 
@@ -221,16 +221,23 @@ void GnLabelDraw(GnWidget *ctx, GnEvent *event)
   GnPosition *position = GnWidgetComponent(ctx, GnPosition);
 
 #ifdef USE_SDL
+/*
   SDL_Rect r = {0};
   r.x = position->x + 5;
   r.y = position->y + 5;
   r.w = position->width - 10;
   r.h = position->height - 10;
 
-  SDL_FillRect(GnUnsafe.screen, &r,
-    SDL_MapRGB(GnUnsafe.screen->format, GN_WIDGET_FOREGROUND));
+  SDL_FillRect(GnUnsafe.buffer, &r,
+    SDL_MapRGB(GnUnsafe.buffer->format, GN_WIDGET_FOREGROUND));
+*/
+  SDL_Rect r = {0};
+  r.x = position->x;
+  r.y = position->y;
+  r.w = position->width;
+  r.h = position->height;
 
-  SDL_BlitSurface(GnInternal.mediumMono->surface, NULL, GnUnsafe.screen, &r);
+  SDL_BlitSurface(GnInternal.mediumMono->surface, NULL, GnUnsafe.buffer, &r);
 #endif
 }
 
@@ -295,8 +302,8 @@ void GnFormSize(GnWidget *ctx, GnEvent *event)
 void GnFormDraw(GnWidget *ctx, GnEvent *event)
 {
 #ifdef USE_SDL
-  SDL_FillRect(GnUnsafe.screen, &GnUnsafe.screen->clip_rect,
-    SDL_MapRGB(GnUnsafe.screen->format, GN_FORM_BACKGROUND));
+  SDL_FillRect(GnUnsafe.buffer, &GnUnsafe.screen->clip_rect,
+    SDL_MapRGB(GnUnsafe.buffer->format, GN_FORM_BACKGROUND));
 #endif
 }
 
@@ -337,6 +344,7 @@ GnImage *GnImageCreateFromString(char *str)
   int x = 0;
   int y = 0;
   size_t i = 0;
+  int colorMod[3] = {GN_WIDGET_FOREGROUND};
 
   rtn = palloc(GnImage);
   rtn->rawData = vector_new(unsigned char);
@@ -366,10 +374,10 @@ GnImage *GnImageCreateFromString(char *str)
 
 #ifdef USE_SDL
   rtn->surface = SDL_CreateRGBSurface(0, width, height, 32,
-    GnUnsafe.screen->format->Rmask,
-    GnUnsafe.screen->format->Gmask,
-    GnUnsafe.screen->format->Bmask,
-    GnUnsafe.screen->format->Amask);
+    GnUnsafe.buffer->format->Rmask,
+    GnUnsafe.buffer->format->Gmask,
+    GnUnsafe.buffer->format->Bmask,
+    GnUnsafe.buffer->format->Amask);
 
   i = 0;
 
@@ -377,7 +385,8 @@ GnImage *GnImageCreateFromString(char *str)
   {
     for(x = 0; x < width; x++)
     {
-      set_pixel(rtn->surface, x, y, SDL_MapRGBA(rtn->surface->format, GnUnsafe.pngData[i], GnUnsafe.pngData[i+1], GnUnsafe.pngData[i+2], GnUnsafe.pngData[i+3]));
+      set_pixel(rtn->surface, x, y, SDL_MapRGBA(rtn->surface->format,
+        GnUnsafe.pngData[i] + colorMod[0], GnUnsafe.pngData[i+1] + colorMod[1], GnUnsafe.pngData[i+2] + colorMod[2], GnUnsafe.pngData[i+3]));
       i+=4;
     }
   }
@@ -453,6 +462,8 @@ int GnInit(int argc, char **argv, char *layout)
   {
     return 1;
   }
+
+  GnUnsafe.buffer = SDL_DisplayFormatAlpha(GnUnsafe.screen);
 #endif
 
   GnInternal.forms = vector_new(GnWidget *);
@@ -504,6 +515,8 @@ void GnRun()
         break;
       }
 
+      SDL_FreeSurface(GnUnsafe.buffer);
+      GnUnsafe.buffer = SDL_DisplayFormatAlpha(GnUnsafe.screen);
       GnPropagateEvent("size");
     }
     else if(event.type == SDL_QUIT)
@@ -513,6 +526,9 @@ void GnRun()
     }
 
     GnPropagateEvent("draw");
+
+    SDL_BlitSurface(GnUnsafe.buffer, NULL, GnUnsafe.screen, NULL);
+
     SDL_Flip(GnUnsafe.screen);
   }
 #endif
@@ -532,6 +548,7 @@ void GnCleanup()
   GnImageDestroy(GnInternal.mediumMono);
 
 #ifdef USE_SDL
+  SDL_FreeSurface(GnUnsafe.buffer);
   SDL_Quit();
 #endif
 
