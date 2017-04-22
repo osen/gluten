@@ -5,6 +5,7 @@
   #include "Label.h"
   #include "Widget.h"
   #include "Position.h"
+  #include "Draw.h"
 #endif
 
 #ifdef USE_SDL
@@ -33,6 +34,8 @@ void GnButtonDraw(GnWidget *ctx, GnEvent *event)
   SDL_FillRect(GnUnsafe.buffer, &r,
     SDL_MapRGB(GnUnsafe.buffer->format, GN_WIDGET_BACKGROUND));
 #endif
+  GnDrawFillRect(event, position->x, position->y,
+    position->width, position->height, 0, 0, 100);
 }
 
 void GnButtonInit(GnWidget *ctx, GnEvent *event)

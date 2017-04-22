@@ -124,8 +124,10 @@ void *_GnWidgetAddComponent(GnWidget *ctx, size_t size, char *type, void (*initF
 
   vector_push_back(ctx->components, entry);
 
-  //GnWidgetAddEvent(ctx, "init", initFunc);
-  //GnWidgetEvent(ctx, "init", NULL);
+/*
+  GnWidgetAddEvent(ctx, "init", initFunc);
+  GnWidgetEvent(ctx, "init", NULL);
+*/
   initFunc(ctx, NULL);
 
   return rtn;
@@ -158,12 +160,100 @@ void GnWidgetAddEvent(GnWidget *ctx, char *name,
 }
 
 #ifndef AMALGAMATION
+  #include "Event.h"
+  #include <palloc.h>
+#endif
+
+#include <string.h>
+
+GnEvent *GnEventCreate()
+{
+  GnEvent *rtn = NULL;
+
+  rtn = palloc(GnEvent);
+  rtn->components = vector_new(struct GnComponentEntry);
+
+  return rtn;
+}
+
+void GnEventDestroy(GnEvent *ctx)
+{
+  size_t i = 0;
+
+  for(i = 0; i < vector_size(ctx->components); i++)
+  {
+    pfree(vector_at(ctx->components, i).data);
+    free(vector_at(ctx->components, i).type);
+  }
+
+  vector_delete(ctx->components);
+  pfree(ctx);
+}
+
+void *_GnEventAddComponent(GnWidget *ctx, size_t size, char *type)
+{ 
+  void *rtn = NULL;
+  struct GnComponentEntry entry = {0};
+
+  rtn = _palloc(size, type);
+  entry.data = rtn;
+  entry.type = strdup(type);
+
+  vector_push_back(ctx->components, entry);
+
+  return rtn;
+}
+#ifndef AMALGAMATION
+  #include "Draw.h"
+  #include "config.h"
+  #include "gluten.h"
+#endif
+
+void GnDrawPixel(GnEvent *ctx, int x, int y, int r, int g, int b)
+{
+#ifdef USE_X11
+  if(GnUnsafe.r != r || GnUnsafe.g != g || GnUnsafe.b != b)
+  {
+    GnUnsafe.r = r;
+    GnUnsafe.g = g;
+    GnUnsafe.b = b;
+    XFreeColors(GnUnsafe.display, GnUnsafe.cmap, &GnUnsafe.color.pixel, 1, 0);
+    GnUnsafe.color.flags = DoRed | DoGreen | DoBlue;
+    GnUnsafe.color.red = (r / 255.0f) * 65535;
+    GnUnsafe.color.green = (g / 255.0f) * 65535;
+    GnUnsafe.color.blue = (b / 255.0f) * 65535;
+    XAllocColor(GnUnsafe.display, GnUnsafe.cmap, &GnUnsafe.color);
+    XSetForeground(GnUnsafe.display, GnUnsafe.gc, GnUnsafe.color.pixel);
+    printf("Changing color\n");
+  }
+
+  XDrawPoint(GnUnsafe.display, GnUnsafe.window, GnUnsafe.gc,
+    x, y);
+#endif
+}
+
+void GnDrawFillRect(GnEvent *ctx, int x, int y, int width, int height,
+  int r, int g, int b)
+{
+  size_t xi = 0;
+  size_t yi = 0;
+
+  for(yi = 0; yi < height; yi++)
+  {
+    for(xi = 0; xi < width; xi++)
+    {
+      GnDrawPixel(ctx, x + xi, y + yi, r, g, b);
+    }
+  }
+}
+#ifndef AMALGAMATION
   #include "config.h"
   #include "gluten.h"
   #include "Button.h"
   #include "Label.h"
   #include "Widget.h"
   #include "Position.h"
+  #include "Draw.h"
 #endif
 
 #ifdef USE_SDL
@@ -192,6 +282,8 @@ void GnButtonDraw(GnWidget *ctx, GnEvent *event)
   SDL_FillRect(GnUnsafe.buffer, &r,
     SDL_MapRGB(GnUnsafe.buffer->format, GN_WIDGET_BACKGROUND));
 #endif
+  GnDrawFillRect(event, position->x, position->y,
+    position->width, position->height, 0, 0, 100);
 }
 
 void GnButtonInit(GnWidget *ctx, GnEvent *event)
@@ -209,6 +301,7 @@ void GnButtonInit(GnWidget *ctx, GnEvent *event)
   #include "Widget.h"
   #include "Position.h"
   #include "Anchor.h"
+  #include "Draw.h"
   #include <palloc.h>
 #endif
 
@@ -239,6 +332,8 @@ void GnLabelDraw(GnWidget *ctx, GnEvent *event)
 
   SDL_BlitSurface(GnInternal.mediumMono->surface, NULL, GnUnsafe.buffer, &r);
 #endif
+  GnDrawFillRect(event, position->x + 5, position->y + 5,
+    position->width - 10, position->height - 10, 100, 0, 0);
 }
 
 void GnLabelSetText(GnWidget *ctx, char *text)
@@ -284,6 +379,8 @@ void GnAnchorInit(GnWidget *ctx, GnEvent *event)
   #include "Form.h"
   #include "gluten.h"
   #include "Widget.h"
+  #include "Position.h"
+  #include "Draw.h"
   #include <vector.h>
 #endif
 
@@ -301,10 +398,14 @@ void GnFormSize(GnWidget *ctx, GnEvent *event)
 
 void GnFormDraw(GnWidget *ctx, GnEvent *event)
 {
+  GnDraw *draw = GnEventComponent(event, GnDraw);
 #ifdef USE_SDL
   SDL_FillRect(GnUnsafe.buffer, &GnUnsafe.screen->clip_rect,
     SDL_MapRGB(GnUnsafe.buffer->format, GN_FORM_BACKGROUND));
 #endif
+  GnDrawFillRect(event, draw->bounds.x, draw->bounds.y,
+    draw->bounds.width, draw->bounds.height,
+    GN_FORM_BACKGROUND);
 }
 
 void GnFormInit(GnWidget *ctx, GnEvent *event)
@@ -326,13 +427,14 @@ void GnFormInit(GnWidget *ctx, GnEvent *event)
 #endif
 
 #ifdef USE_SDL
-  #include <SDL/SDL.h>
-
 void set_pixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
 {
   Uint8 *target_pixel = (Uint8 *)surface->pixels + y * surface->pitch + x * 4;
   *(Uint32 *)target_pixel = pixel;
 }
+#endif
+#ifdef USE_X11
+  #include <X11/Xlib.h>
 #endif
 
 GnImage *GnImageCreateFromString(char *str)
@@ -391,6 +493,16 @@ GnImage *GnImageCreateFromString(char *str)
     }
   }
 #endif
+#ifdef USE_X11
+  rtn->img = XCreateImage(GnUnsafe.display, CopyFromParent, 24,
+    ZPixmap, 0, GnUnsafe.pngData, width, height, 32, 0);
+
+  rtn->p = XCreatePixmap(GnUnsafe.display, GnUnsafe.window,
+    width, height, 24);
+
+  XPutImage(GnUnsafe.display, rtn->p, GnUnsafe.gc, rtn->img,
+    0, 0, 0, 0, width, height);
+#endif
 
   free(GnUnsafe.pngData); GnUnsafe.pngData = NULL;
 
@@ -437,6 +549,8 @@ char mediumMono[10687] = {'8','9','5','0','4','e','4','7','0','d','0','a','1','a
   #include "gluten.h"
   #include "data.h"
   #include "Position.h"
+  #include "Event.h"
+  #include "Draw.h"
   #include <palloc.h>
 #endif
 
@@ -483,6 +597,18 @@ int GnInit(int argc, char **argv, char *layout)
 
   XSelectInput(GnUnsafe.display, GnUnsafe.window, ExposureMask | KeyPressMask);
   XMapWindow(GnUnsafe.display, GnUnsafe.window);
+  GnUnsafe.gc = DefaultGC(GnUnsafe.display, GnUnsafe.screen);
+/*
+  XGCValues gcvalues = {0};
+  GnUnsafe.gc = XCreateGC(GnUnsafe.display, GnUnsafe.window, 0, &gcvalues);
+*/
+  GnUnsafe.cmap = XDefaultColormap(GnUnsafe.display, GnUnsafe.screen);
+  GnUnsafe.color.flags = DoRed | DoGreen | DoBlue;
+  GnUnsafe.color.red = 00000;
+  GnUnsafe.color.green = 00000;
+  GnUnsafe.color.blue = 00000;
+  XAllocColor(GnUnsafe.display, GnUnsafe.cmap, &GnUnsafe.color);
+  XSetForeground(GnUnsafe.display, GnUnsafe.gc, GnUnsafe.color.pixel);
 #endif
 
   GnInternal.forms = vector_new(GnWidget *);
@@ -494,19 +620,31 @@ int GnInit(int argc, char **argv, char *layout)
   return 0;
 }
 
-void GnPropagateEvent(char *event)
+void GnPropagateEvent(char *eventName)
 {
   size_t i = 0;
+  GnEvent *event = NULL;
 
   if(!GnInternal.activeForm)
   {
     return;
   }
 
+  event = GnEventCreate();
+
+  if(strcmp(eventName, "draw") == 0)
+  {
+    GnDraw * draw = GnEventAddComponent(event, GnDraw);
+    draw->bounds.width = 320;
+    draw->bounds.height = 240;
+  }
+
   for(i = 0; i < vector_size(GnInternal.forms); i++)
   {
-    GnWidgetEvent(vector_at(GnInternal.forms, i), event, NULL);
+    GnWidgetEvent(vector_at(GnInternal.forms, i), eventName, event);
   }
+
+  GnEventDestroy(event);
 }
 
 void GnRun()
@@ -547,7 +685,6 @@ void GnRun()
     GnPropagateEvent("draw");
 
     SDL_BlitSurface(GnUnsafe.buffer, NULL, GnUnsafe.screen, NULL);
-
     SDL_Flip(GnUnsafe.screen);
   }
 #endif
@@ -565,7 +702,7 @@ void GnRun()
 
     if(e.type == Expose)
     {
-
+      GnPropagateEvent("draw");
     }
     else if(e.type == KeyPress)
     {

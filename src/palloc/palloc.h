@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 
-//#define PALLOC_DEBUG
+/* #define PALLOC_DEBUG */
 
 void pool_cleanup();
 void pfree(void *ptr);

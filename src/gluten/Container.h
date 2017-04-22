@@ -2,11 +2,10 @@
 #define GLUTEN_CONTAINER_H
 
 #ifndef AMALGAMATION
+  #include "Object.h"
   #include <vector.h>
 #endif
 
-typedef struct GnObject GnWidget;
-typedef struct GnObject GnEvent;
 typedef struct GnContainer GnContainer;
 
 void GnContainerInit(GnWidget *ctx, GnEvent *event);

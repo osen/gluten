@@ -69,8 +69,10 @@ void *_GnWidgetAddComponent(GnWidget *ctx, size_t size, char *type, void (*initF
 
   vector_push_back(ctx->components, entry);
 
-  //GnWidgetAddEvent(ctx, "init", initFunc);
-  //GnWidgetEvent(ctx, "init", NULL);
+/*
+  GnWidgetAddEvent(ctx, "init", initFunc);
+  GnWidgetEvent(ctx, "init", NULL);
+*/
   initFunc(ctx, NULL);
 
   return rtn;

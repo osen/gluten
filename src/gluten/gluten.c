@@ -2,6 +2,8 @@
   #include "gluten.h"
   #include "data.h"
   #include "Position.h"
+  #include "Event.h"
+  #include "Draw.h"
   #include <palloc.h>
 #endif
 
@@ -48,6 +50,18 @@ int GnInit(int argc, char **argv, char *layout)
 
   XSelectInput(GnUnsafe.display, GnUnsafe.window, ExposureMask | KeyPressMask);
   XMapWindow(GnUnsafe.display, GnUnsafe.window);
+  GnUnsafe.gc = DefaultGC(GnUnsafe.display, GnUnsafe.screen);
+/*
+  XGCValues gcvalues = {0};
+  GnUnsafe.gc = XCreateGC(GnUnsafe.display, GnUnsafe.window, 0, &gcvalues);
+*/
+  GnUnsafe.cmap = XDefaultColormap(GnUnsafe.display, GnUnsafe.screen);
+  GnUnsafe.color.flags = DoRed | DoGreen | DoBlue;
+  GnUnsafe.color.red = 00000;
+  GnUnsafe.color.green = 00000;
+  GnUnsafe.color.blue = 00000;
+  XAllocColor(GnUnsafe.display, GnUnsafe.cmap, &GnUnsafe.color);
+  XSetForeground(GnUnsafe.display, GnUnsafe.gc, GnUnsafe.color.pixel);
 #endif
 
   GnInternal.forms = vector_new(GnWidget *);
@@ -59,19 +73,31 @@ int GnInit(int argc, char **argv, char *layout)
   return 0;
 }
 
-void GnPropagateEvent(char *event)
+void GnPropagateEvent(char *eventName)
 {
   size_t i = 0;
+  GnEvent *event = NULL;
 
   if(!GnInternal.activeForm)
   {
     return;
   }
 
+  event = GnEventCreate();
+
+  if(strcmp(eventName, "draw") == 0)
+  {
+    GnDraw * draw = GnEventAddComponent(event, GnDraw);
+    draw->bounds.width = 320;
+    draw->bounds.height = 240;
+  }
+
   for(i = 0; i < vector_size(GnInternal.forms); i++)
   {
-    GnWidgetEvent(vector_at(GnInternal.forms, i), event, NULL);
+    GnWidgetEvent(vector_at(GnInternal.forms, i), eventName, event);
   }
+
+  GnEventDestroy(event);
 }
 
 void GnRun()
@@ -112,7 +138,6 @@ void GnRun()
     GnPropagateEvent("draw");
 
     SDL_BlitSurface(GnUnsafe.buffer, NULL, GnUnsafe.screen, NULL);
-
     SDL_Flip(GnUnsafe.screen);
   }
 #endif
@@ -130,7 +155,7 @@ void GnRun()
 
     if(e.type == Expose)
     {
-
+      GnPropagateEvent("draw");
     }
     else if(e.type == KeyPress)
     {

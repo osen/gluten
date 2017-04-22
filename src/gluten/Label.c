@@ -5,6 +5,7 @@
   #include "Widget.h"
   #include "Position.h"
   #include "Anchor.h"
+  #include "Draw.h"
   #include <palloc.h>
 #endif
 
@@ -35,6 +36,8 @@ void GnLabelDraw(GnWidget *ctx, GnEvent *event)
 
   SDL_BlitSurface(GnInternal.mediumMono->surface, NULL, GnUnsafe.buffer, &r);
 #endif
+  GnDrawFillRect(event, position->x + 5, position->y + 5,
+    position->width - 10, position->height - 10, 100, 0, 0);
 }
 
 void GnLabelSetText(GnWidget *ctx, char *text)

@@ -13,7 +13,10 @@ echo "#define AMALGAMATION" >> gluten.h
 cat src/palloc/palloc.h >> gluten.h
 cat src/palloc/vector.h >> gluten.h
 cat src/lodepng/lodepng.h >> gluten.h
+cat src/gluten/Object.h >> gluten.h
 cat src/gluten/Widget.h >> gluten.h
+cat src/gluten/Event.h >> gluten.h
+cat src/gluten/Draw.h >> gluten.h
 cat src/gluten/Position.h >> gluten.h
 cat src/gluten/Anchor.h >> gluten.h
 cat src/gluten/Button.h >> gluten.h
@@ -29,6 +32,8 @@ echo -n "" > gluten.c
 echo "#include \"gluten.h\"" >> gluten.c
 cat src/gluten/Container.c >> gluten.c
 cat src/gluten/Widget.c >> gluten.c
+cat src/gluten/Event.c >> gluten.c
+cat src/gluten/Draw.c >> gluten.c
 cat src/gluten/Button.c >> gluten.c
 cat src/gluten/Label.c >> gluten.c
 cat src/gluten/Anchor.c >> gluten.c
@@ -42,7 +47,7 @@ cat src/lodepng/lodepng.c >> gluten.c
 cat src/palloc/palloc.c >> gluten.c
 cat src/palloc/vector.c >> gluten.c
 
-CFLAGS="-g -Wall -pedantic -I/usr/local/include"
+CFLAGS="-g -ansi -Wall -pedantic -I/usr/local/include -Wno-variadic-macros"
 LDFLAGS="-L/usr/local/lib -lSDL -lX11"
 
 echo "Building amalgamation examples"

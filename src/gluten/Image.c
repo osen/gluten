@@ -7,13 +7,14 @@
 #endif
 
 #ifdef USE_SDL
-  #include <SDL/SDL.h>
-
 void set_pixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
 {
   Uint8 *target_pixel = (Uint8 *)surface->pixels + y * surface->pitch + x * 4;
   *(Uint32 *)target_pixel = pixel;
 }
+#endif
+#ifdef USE_X11
+  #include <X11/Xlib.h>
 #endif
 
 GnImage *GnImageCreateFromString(char *str)
@@ -71,6 +72,16 @@ GnImage *GnImageCreateFromString(char *str)
       i+=4;
     }
   }
+#endif
+#ifdef USE_X11
+  rtn->img = XCreateImage(GnUnsafe.display, CopyFromParent, 24,
+    ZPixmap, 0, GnUnsafe.pngData, width, height, 32, 0);
+
+  rtn->p = XCreatePixmap(GnUnsafe.display, GnUnsafe.window,
+    width, height, 24);
+
+  XPutImage(GnUnsafe.display, rtn->p, GnUnsafe.gc, rtn->img,
+    0, 0, 0, 0, width, height);
 #endif
 
   free(GnUnsafe.pngData); GnUnsafe.pngData = NULL;

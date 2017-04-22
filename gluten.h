@@ -3,8 +3,10 @@
 #ifndef GLUTEN_CONFIG_H
 #define GLUTEN_CONFIG_H
 
+/*
 #define USE_SDL
-//#define USE_X11
+*/
+#define USE_X11
 
 #define GN_FORM_BACKGROUND 250, 250, 250
 #define GN_WIDGET_BACKGROUND 100, 100, 200
@@ -18,7 +20,7 @@
 
 #include <stdlib.h>
 
-//#define PALLOC_DEBUG
+/* #define PALLOC_DEBUG */
 
 void pool_cleanup();
 void pfree(void *ptr);
@@ -1849,8 +1851,8 @@ Account: lode dot vandevenne.
 
 Copyright (c) 2005-2016 Lode Vandevenne
 */
-#ifndef GLUTEN_WIDGET_H
-#define GLUTEN_WIDGET_H
+#ifndef GN_OBJECT_H
+#define GN_OBJECT_H
 
 #ifndef AMALGAMATION
   #include <vector.h>
@@ -1877,6 +1879,14 @@ struct GnObject
   vector(struct GnEventEntry) *events;
 };
 
+#endif
+#ifndef GLUTEN_WIDGET_H
+#define GLUTEN_WIDGET_H
+
+#ifndef AMALGAMATION
+  #include <Object.h>
+#endif
+
 GnWidget *_GnWidgetCreate(size_t size, char *type, void (*initFunc)(GnWidget *, GnEvent *));
 #define GnWidgetCreate(T) \
   _GnWidgetCreate(sizeof(T), #T, T##Init)
@@ -1897,12 +1907,65 @@ void GnWidgetEvent(GnWidget *ctx, char *name, GnEvent *event);
 void GnWidgetDestroy(GnWidget *ctx);
 
 #endif
+#ifndef GLUTEN_EVENT_H
+#define GLUTEN_EVENT_H
+
+#ifndef AMALGAMATION
+  #include "Object.h"
+#endif
+
+void *_GnEventAddComponent(GnWidget *ctx, size_t size, char *type);
+#define GnEventAddComponent(W, T) \
+  (T*)_GnEventAddComponent(W, sizeof(T), #T)
+
+void *_GnWidgetComponent(GnWidget *ctx, char *type);
+#define GnEventComponent(W, T) \
+  (T*)_GnWidgetComponent(W, #T)
+
+GnEvent *GnEventCreate();
+void GnEventDestroy(GnEvent *ctx);
+
+#endif
+#ifndef GLUTEN_DRAW_H
+#define GLUTEN_DRAW_H
+
+#ifndef AMALGAMATION
+  #include "Object.h"
+#endif
+
+typedef struct GnDraw GnDraw;
+
+struct GnDraw
+{
+  struct
+  {
+    int x;
+    int y;
+    int width;
+    int height;
+  } bounds;
+
+  struct
+  {
+    int x;
+    int y;
+  } offset;
+};
+
+void GnDrawPixel(GnEvent *ctx, int x, int y, int r, int g, int b);
+
+void GnDrawFillRect(GnEvent *ctx, int x, int y, int width, int height,
+  int r, int g, int b);
+
+#endif
 #ifndef GLUTEN_POSITION_H
 #define GLUTEN_POSITION_H
 
+#ifndef AMALGAMATION
+  #include "Object.h"
+#endif
+
 typedef struct GnPosition GnPosition;
-typedef struct GnObject GnWidget;
-typedef struct GnObject GnEvent;
 
 void GnPositionInit(GnWidget *ctx, GnEvent *event);
 void GnWidgetSetPosition(GnWidget *ctx, int x, int y);
@@ -1920,8 +1983,10 @@ struct GnPosition
 #ifndef GLUTEN_ANCHOR_H
 #define GLUTEN_ANCHOR_H
 
-typedef struct GnObject GnWidget;
-typedef struct GnObject GnEvent;
+#ifndef AMALGAMATION
+  #include "Object.h"
+#endif
+
 typedef struct GnAnchor GnAnchor;
 
 void GnAnchorInit(GnWidget *ctx, GnEvent *event);
@@ -1938,8 +2003,10 @@ struct GnAnchor
 #ifndef GLUTEN_BUTTON_H
 #define GLUTEN_BUTTON_H
 
-typedef struct GnObject GnEvent;
-typedef struct GnObject GnWidget;
+#ifndef AMALGAMATION
+  #include "Object.h"
+#endif
+
 typedef struct GnButton GnButton;
 
 void GnButtonInit(GnWidget *ctx, GnEvent *event);
@@ -1953,8 +2020,10 @@ struct GnButton
 #ifndef GLUTEN_LABEL_H
 #define GLUTEN_LABEL_H
 
-typedef struct GnObject GnEvent;
-typedef struct GnObject GnWidget;
+#ifndef AMALGAMATION
+  #include "Object.h"
+#endif
+
 typedef struct GnLabel GnLabel;
 
 void GnLabelInit(GnWidget *ctx, GnEvent *event);
@@ -1971,11 +2040,10 @@ struct GnLabel
 #define GLUTEN_CONTAINER_H
 
 #ifndef AMALGAMATION
+  #include "Object.h"
   #include <vector.h>
 #endif
 
-typedef struct GnObject GnWidget;
-typedef struct GnObject GnEvent;
 typedef struct GnContainer GnContainer;
 
 void GnContainerInit(GnWidget *ctx, GnEvent *event);
@@ -1990,9 +2058,11 @@ struct GnContainer
 #ifndef GLUTEN_FORM_H
 #define GLUTEN_FORM_H
 
+#ifndef AMALGAMATION
+  #include "Object.h"
+#endif
+
 typedef struct GnForm GnForm;
-typedef struct GnObject GnEvent;
-typedef struct GnObject GnWidget;
 
 void GnFormInit(GnWidget *ctx, GnEvent *event);
 void GnFormShow(GnWidget *ctx);
@@ -2008,11 +2078,15 @@ struct GnForm
 
 #ifndef AMALGAMATION
   #include "config.h"
+  #include "Object.h"
   #include <vector.h>
 #endif
 
 #ifdef USE_SDL
   #include <SDL/SDL.h>
+#endif
+#ifdef USE_X11
+  #include <X11/Xlib.h>
 #endif
 
 typedef struct GnImage GnImage;
@@ -2024,6 +2098,10 @@ struct GnImage
   int height;
 #ifdef USE_SDL
   SDL_Surface *surface;
+#endif
+#ifdef USE_X11
+  XImage *img;
+  Pixmap p;
 #endif
 };
 
@@ -2054,6 +2132,8 @@ void GnHexArrayFromString(char *input, vector(unsigned char) *output);
   #include "Button.h"
   #include "Label.h"
   #include "Image.h"
+  #include "Event.h"
+  #include "Object.h"
   #include <vector.h>
 #endif
 
@@ -2063,8 +2143,6 @@ void GnHexArrayFromString(char *input, vector(unsigned char) *output);
 #ifdef USE_X11
   #include <X11/Xlib.h>
 #endif
-
-typedef struct GnObject GnEvent;
 
 struct GnInternal
 {
@@ -2087,6 +2165,10 @@ struct GnUnsafe
   Display *display;
   int screen;
   Window window;
+  GC gc;
+  Colormap cmap;
+  XColor color;
+  int r; int g; int b;
 #endif
 };
 extern struct GnUnsafe GnUnsafe;

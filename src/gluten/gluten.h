@@ -11,6 +11,8 @@
   #include "Button.h"
   #include "Label.h"
   #include "Image.h"
+  #include "Event.h"
+  #include "Object.h"
   #include <vector.h>
 #endif
 
@@ -20,8 +22,6 @@
 #ifdef USE_X11
   #include <X11/Xlib.h>
 #endif
-
-typedef struct GnObject GnEvent;
 
 struct GnInternal
 {
@@ -44,6 +44,10 @@ struct GnUnsafe
   Display *display;
   int screen;
   Window window;
+  GC gc;
+  Colormap cmap;
+  XColor color;
+  int r; int g; int b;
 #endif
 };
 extern struct GnUnsafe GnUnsafe;

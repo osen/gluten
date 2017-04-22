@@ -1,9 +1,11 @@
 #ifndef GLUTEN_POSITION_H
 #define GLUTEN_POSITION_H
 
+#ifndef AMALGAMATION
+  #include "Object.h"
+#endif
+
 typedef struct GnPosition GnPosition;
-typedef struct GnObject GnWidget;
-typedef struct GnObject GnEvent;
 
 void GnPositionInit(GnWidget *ctx, GnEvent *event);
 void GnWidgetSetPosition(GnWidget *ctx, int x, int y);
