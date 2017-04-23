@@ -9,25 +9,11 @@
   #include <palloc.h>
 #endif
 
-#ifdef USE_SDL
-  #include <SDL/SDL.h>
-#endif
-
 void GnLabelDraw(GnWidget *ctx, GnEvent *event)
 {
   GnPosition *position = GnWidgetComponent(ctx, GnPosition);
 
-#ifdef USE_SDL
 /*
-  SDL_Rect r = {0};
-  r.x = position->x + 5;
-  r.y = position->y + 5;
-  r.w = position->width - 10;
-  r.h = position->height - 10;
-
-  SDL_FillRect(GnUnsafe.buffer, &r,
-    SDL_MapRGB(GnUnsafe.buffer->format, GN_WIDGET_FOREGROUND));
-*/
   SDL_Rect r = {0};
   r.x = position->x;
   r.y = position->y;
@@ -35,9 +21,11 @@ void GnLabelDraw(GnWidget *ctx, GnEvent *event)
   r.h = position->height;
 
   SDL_BlitSurface(GnInternal.mediumMono->surface, NULL, GnUnsafe.buffer, &r);
-#endif
+*/
   GnDrawFillRect(event, position->x + 5, position->y + 5,
-    position->width - 10, position->height - 10, 100, 0, 0);
+    position->width - 10, position->height - 10, GN_WIDGET_FOREGROUND);
+
+  GnDrawImage(event, GnInternal.mediumMono, position->x, position->y);
 }
 
 void GnLabelSetText(GnWidget *ctx, char *text)

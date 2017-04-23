@@ -205,6 +205,8 @@ void *_GnEventAddComponent(GnWidget *ctx, size_t size, char *type)
 }
 #ifndef AMALGAMATION
   #include "Draw.h"
+  #include "Image.h"
+  #include "Event.h"
   #include "config.h"
   #include "gluten.h"
 #endif
@@ -224,11 +226,20 @@ void GnDrawPixel(GnEvent *ctx, int x, int y, int r, int g, int b)
     GnUnsafe.color.blue = (b / 255.0f) * 65535;
     XAllocColor(GnUnsafe.display, GnUnsafe.cmap, &GnUnsafe.color);
     XSetForeground(GnUnsafe.display, GnUnsafe.gc, GnUnsafe.color.pixel);
-    printf("Changing color\n");
+    /*printf("Changing color\n");*/
   }
 
   XDrawPoint(GnUnsafe.display, GnUnsafe.window, GnUnsafe.gc,
     x, y);
+#endif
+#ifdef USE_SDL
+  SDL_Rect rect = {0};
+  rect.x = x;
+  rect.y = y;
+  rect.w = 1;
+  rect.h = 1;
+  SDL_FillRect(GnUnsafe.buffer, &rect,
+    SDL_MapRGB(GnUnsafe.buffer->format, r, g, b));
 #endif
 }
 
@@ -246,6 +257,27 @@ void GnDrawFillRect(GnEvent *ctx, int x, int y, int width, int height,
     }
   }
 }
+
+void GnDrawImage(GnEvent *ctx, struct GnImage *img, int x, int y)
+{
+  size_t xi = 0;
+  size_t yi = 0;
+  size_t i = 0;
+
+  for(yi = 0; yi < img->height; yi++)
+  {
+    for(xi = 0; xi < img->width; xi++)
+    {
+      GnDrawPixel(ctx, x + xi, y + yi, 
+        vector_at(img->rawData, i),
+        vector_at(img->rawData, i + 1),
+        /*vector_at(img->rawData, i + 2));*/
+        vector_at(img->rawData, i + 3));
+
+      i+=4;
+    }
+  }
+}
 #ifndef AMALGAMATION
   #include "config.h"
   #include "gluten.h"
@@ -256,34 +288,12 @@ void GnDrawFillRect(GnEvent *ctx, int x, int y, int width, int height,
   #include "Draw.h"
 #endif
 
-#ifdef USE_SDL
-  #include <SDL/SDL.h>
-#endif
-
 void GnButtonDraw(GnWidget *ctx, GnEvent *event)
 {
   GnPosition *position = GnWidgetComponent(ctx, GnPosition);
 
-#ifdef USE_SDL
-  SDL_Rect r = {0};
-  r.x = position->x;
-  r.y = position->y;
-  r.w = position->width;
-  r.h = position->height;
-
-  SDL_FillRect(GnUnsafe.buffer, &r,
-    SDL_MapRGB(GnUnsafe.buffer->format, GN_WIDGET_BORDER));
-
-  r.x++;
-  r.y++;
-  r.w-=2;
-  r.h-=2;
-
-  SDL_FillRect(GnUnsafe.buffer, &r,
-    SDL_MapRGB(GnUnsafe.buffer->format, GN_WIDGET_BACKGROUND));
-#endif
   GnDrawFillRect(event, position->x, position->y,
-    position->width, position->height, 0, 0, 100);
+    position->width, position->height, GN_WIDGET_BACKGROUND);
 }
 
 void GnButtonInit(GnWidget *ctx, GnEvent *event)
@@ -305,25 +315,11 @@ void GnButtonInit(GnWidget *ctx, GnEvent *event)
   #include <palloc.h>
 #endif
 
-#ifdef USE_SDL
-  #include <SDL/SDL.h>
-#endif
-
 void GnLabelDraw(GnWidget *ctx, GnEvent *event)
 {
   GnPosition *position = GnWidgetComponent(ctx, GnPosition);
 
-#ifdef USE_SDL
 /*
-  SDL_Rect r = {0};
-  r.x = position->x + 5;
-  r.y = position->y + 5;
-  r.w = position->width - 10;
-  r.h = position->height - 10;
-
-  SDL_FillRect(GnUnsafe.buffer, &r,
-    SDL_MapRGB(GnUnsafe.buffer->format, GN_WIDGET_FOREGROUND));
-*/
   SDL_Rect r = {0};
   r.x = position->x;
   r.y = position->y;
@@ -331,9 +327,11 @@ void GnLabelDraw(GnWidget *ctx, GnEvent *event)
   r.h = position->height;
 
   SDL_BlitSurface(GnInternal.mediumMono->surface, NULL, GnUnsafe.buffer, &r);
-#endif
+*/
   GnDrawFillRect(event, position->x + 5, position->y + 5,
-    position->width - 10, position->height - 10, 100, 0, 0);
+    position->width - 10, position->height - 10, GN_WIDGET_FOREGROUND);
+
+  GnDrawImage(event, GnInternal.mediumMono, position->x, position->y);
 }
 
 void GnLabelSetText(GnWidget *ctx, char *text)
@@ -399,10 +397,7 @@ void GnFormSize(GnWidget *ctx, GnEvent *event)
 void GnFormDraw(GnWidget *ctx, GnEvent *event)
 {
   GnDraw *draw = GnEventComponent(event, GnDraw);
-#ifdef USE_SDL
-  SDL_FillRect(GnUnsafe.buffer, &GnUnsafe.screen->clip_rect,
-    SDL_MapRGB(GnUnsafe.buffer->format, GN_FORM_BACKGROUND));
-#endif
+
   GnDrawFillRect(event, draw->bounds.x, draw->bounds.y,
     draw->bounds.width, draw->bounds.height,
     GN_FORM_BACKGROUND);
@@ -426,16 +421,26 @@ void GnFormInit(GnWidget *ctx, GnEvent *event)
   #include <palloc.h>
 #endif
 
-#ifdef USE_SDL
+/*
 void set_pixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
 {
   Uint8 *target_pixel = (Uint8 *)surface->pixels + y * surface->pitch + x * 4;
   *(Uint32 *)target_pixel = pixel;
 }
-#endif
-#ifdef USE_X11
-  #include <X11/Xlib.h>
-#endif
+*/
+
+GnImage *GnImageCreate(int width, int height)
+{
+  GnImage *rtn = NULL;
+
+  rtn = palloc(GnImage);
+  rtn->width = width;
+  rtn->height = height;
+  rtn->rawData = vector_new(unsigned char);
+  vector_resize(rtn->rawData, width * height * 4);
+
+  return rtn;
+}
 
 GnImage *GnImageCreateFromString(char *str)
 {
@@ -443,10 +448,7 @@ GnImage *GnImageCreateFromString(char *str)
   unsigned error = 0;
   unsigned width = 0;
   unsigned height = 0;
-  int x = 0;
-  int y = 0;
   size_t i = 0;
-  int colorMod[3] = {GN_WIDGET_FOREGROUND};
 
   rtn = palloc(GnImage);
   rtn->rawData = vector_new(unsigned char);
@@ -474,36 +476,6 @@ GnImage *GnImageCreateFromString(char *str)
     vector_set(rtn->rawData, i, GnUnsafe.pngData[i]);
   }
 
-#ifdef USE_SDL
-  rtn->surface = SDL_CreateRGBSurface(0, width, height, 32,
-    GnUnsafe.buffer->format->Rmask,
-    GnUnsafe.buffer->format->Gmask,
-    GnUnsafe.buffer->format->Bmask,
-    GnUnsafe.buffer->format->Amask);
-
-  i = 0;
-
-  for(y = 0; y < height; y++)
-  {
-    for(x = 0; x < width; x++)
-    {
-      set_pixel(rtn->surface, x, y, SDL_MapRGBA(rtn->surface->format,
-        GnUnsafe.pngData[i] + colorMod[0], GnUnsafe.pngData[i+1] + colorMod[1], GnUnsafe.pngData[i+2] + colorMod[2], GnUnsafe.pngData[i+3]));
-      i+=4;
-    }
-  }
-#endif
-#ifdef USE_X11
-  rtn->img = XCreateImage(GnUnsafe.display, CopyFromParent, 24,
-    ZPixmap, 0, GnUnsafe.pngData, width, height, 32, 0);
-
-  rtn->p = XCreatePixmap(GnUnsafe.display, GnUnsafe.window,
-    width, height, 24);
-
-  XPutImage(GnUnsafe.display, rtn->p, GnUnsafe.gc, rtn->img,
-    0, 0, 0, 0, width, height);
-#endif
-
   free(GnUnsafe.pngData); GnUnsafe.pngData = NULL;
 
   return rtn;
@@ -511,12 +483,20 @@ GnImage *GnImageCreateFromString(char *str)
 
 void GnImageDestroy(GnImage *ctx)
 {
-#ifdef USE_SDL
-  SDL_FreeSurface(ctx->surface);
-#endif
   vector_delete(ctx->rawData);
   pfree(ctx);
 }
+
+int GnImageWidth(GnImage *ctx)
+{
+  return ctx->width;
+}
+
+int GnImageHeight(GnImage *ctx)
+{
+  return ctx->height;
+}
+
 #ifndef AMALGAMATION
   #include "Position.h"
   #include "Widget.h"
@@ -595,7 +575,7 @@ int GnInit(int argc, char **argv, char *layout)
     BlackPixel(GnUnsafe.display, GnUnsafe.screen),
     WhitePixel(GnUnsafe.display, GnUnsafe.screen));
 
-  XSelectInput(GnUnsafe.display, GnUnsafe.window, ExposureMask | KeyPressMask);
+  XSelectInput(GnUnsafe.display, GnUnsafe.window, ExposureMask | KeyPressMask | StructureNotifyMask);
   XMapWindow(GnUnsafe.display, GnUnsafe.window);
   GnUnsafe.gc = DefaultGC(GnUnsafe.display, GnUnsafe.screen);
 /*
@@ -614,6 +594,9 @@ int GnInit(int argc, char **argv, char *layout)
   GnInternal.forms = vector_new(GnWidget *);
 
   GnInternal.mediumMono = GnImageCreateFromString(mediumMono);
+
+  GnInternal.buffer = GnImageCreate(GN_INITIAL_WIDTH, GN_INITIAL_HEIGHT);
+  GnInternal.lastBuffer = GnImageCreate(GN_INITIAL_WIDTH, GN_INITIAL_HEIGHT);
 
   /*GnRun();*/
 
@@ -635,8 +618,12 @@ void GnPropagateEvent(char *eventName)
   if(strcmp(eventName, "draw") == 0)
   {
     GnDraw * draw = GnEventAddComponent(event, GnDraw);
-    draw->bounds.width = 320;
-    draw->bounds.height = 240;
+    draw->bounds.width = GnImageWidth(GnInternal.buffer);
+    draw->bounds.height = GnImageHeight(GnInternal.buffer);
+  }
+  else if(strcmp(eventName, "size") == 0)
+  {
+
   }
 
   for(i = 0; i < vector_size(GnInternal.forms); i++)
@@ -674,6 +661,10 @@ void GnRun()
 
       SDL_FreeSurface(GnUnsafe.buffer);
       GnUnsafe.buffer = SDL_DisplayFormatAlpha(GnUnsafe.screen);
+      GnImageDestroy(GnInternal.buffer);
+      GnImageDestroy(GnInternal.lastBuffer);
+      GnInternal.buffer = GnImageCreate(event.resize.w, event.resize.h);
+      GnInternal.lastBuffer = GnImageCreate(event.resize.w, event.resize.h);
       GnPropagateEvent("size");
     }
     else if(event.type == SDL_QUIT)
@@ -704,6 +695,13 @@ void GnRun()
     {
       GnPropagateEvent("draw");
     }
+    else if(e.type == ConfigureNotify)
+    {
+      GnImageDestroy(GnInternal.buffer);
+      GnImageDestroy(GnInternal.lastBuffer);
+      GnInternal.buffer = GnImageCreate(e.xconfigure.width, e.xconfigure.height);
+      GnInternal.lastBuffer = GnImageCreate(e.xconfigure.width, e.xconfigure.height);
+    }
     else if(e.type == KeyPress)
     {
       GnInternal.running = 0;
@@ -732,6 +730,8 @@ void GnCleanup()
   vector_delete(GnInternal.forms);
 
   GnImageDestroy(GnInternal.mediumMono);
+  GnImageDestroy(GnInternal.buffer);
+  GnImageDestroy(GnInternal.lastBuffer);
 
 #ifdef USE_SDL
   SDL_FreeSurface(GnUnsafe.buffer);

@@ -8,34 +8,12 @@
   #include "Draw.h"
 #endif
 
-#ifdef USE_SDL
-  #include <SDL/SDL.h>
-#endif
-
 void GnButtonDraw(GnWidget *ctx, GnEvent *event)
 {
   GnPosition *position = GnWidgetComponent(ctx, GnPosition);
 
-#ifdef USE_SDL
-  SDL_Rect r = {0};
-  r.x = position->x;
-  r.y = position->y;
-  r.w = position->width;
-  r.h = position->height;
-
-  SDL_FillRect(GnUnsafe.buffer, &r,
-    SDL_MapRGB(GnUnsafe.buffer->format, GN_WIDGET_BORDER));
-
-  r.x++;
-  r.y++;
-  r.w-=2;
-  r.h-=2;
-
-  SDL_FillRect(GnUnsafe.buffer, &r,
-    SDL_MapRGB(GnUnsafe.buffer->format, GN_WIDGET_BACKGROUND));
-#endif
   GnDrawFillRect(event, position->x, position->y,
-    position->width, position->height, 0, 0, 100);
+    position->width, position->height, GN_WIDGET_BACKGROUND);
 }
 
 void GnButtonInit(GnWidget *ctx, GnEvent *event)

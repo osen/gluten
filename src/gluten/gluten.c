@@ -48,7 +48,7 @@ int GnInit(int argc, char **argv, char *layout)
     BlackPixel(GnUnsafe.display, GnUnsafe.screen),
     WhitePixel(GnUnsafe.display, GnUnsafe.screen));
 
-  XSelectInput(GnUnsafe.display, GnUnsafe.window, ExposureMask | KeyPressMask);
+  XSelectInput(GnUnsafe.display, GnUnsafe.window, ExposureMask | KeyPressMask | StructureNotifyMask);
   XMapWindow(GnUnsafe.display, GnUnsafe.window);
   GnUnsafe.gc = DefaultGC(GnUnsafe.display, GnUnsafe.screen);
 /*
@@ -67,6 +67,9 @@ int GnInit(int argc, char **argv, char *layout)
   GnInternal.forms = vector_new(GnWidget *);
 
   GnInternal.mediumMono = GnImageCreateFromString(mediumMono);
+
+  GnInternal.buffer = GnImageCreate(GN_INITIAL_WIDTH, GN_INITIAL_HEIGHT);
+  GnInternal.lastBuffer = GnImageCreate(GN_INITIAL_WIDTH, GN_INITIAL_HEIGHT);
 
   /*GnRun();*/
 
@@ -88,8 +91,12 @@ void GnPropagateEvent(char *eventName)
   if(strcmp(eventName, "draw") == 0)
   {
     GnDraw * draw = GnEventAddComponent(event, GnDraw);
-    draw->bounds.width = 320;
-    draw->bounds.height = 240;
+    draw->bounds.width = GnImageWidth(GnInternal.buffer);
+    draw->bounds.height = GnImageHeight(GnInternal.buffer);
+  }
+  else if(strcmp(eventName, "size") == 0)
+  {
+
   }
 
   for(i = 0; i < vector_size(GnInternal.forms); i++)
@@ -127,6 +134,10 @@ void GnRun()
 
       SDL_FreeSurface(GnUnsafe.buffer);
       GnUnsafe.buffer = SDL_DisplayFormatAlpha(GnUnsafe.screen);
+      GnImageDestroy(GnInternal.buffer);
+      GnImageDestroy(GnInternal.lastBuffer);
+      GnInternal.buffer = GnImageCreate(event.resize.w, event.resize.h);
+      GnInternal.lastBuffer = GnImageCreate(event.resize.w, event.resize.h);
       GnPropagateEvent("size");
     }
     else if(event.type == SDL_QUIT)
@@ -157,6 +168,13 @@ void GnRun()
     {
       GnPropagateEvent("draw");
     }
+    else if(e.type == ConfigureNotify)
+    {
+      GnImageDestroy(GnInternal.buffer);
+      GnImageDestroy(GnInternal.lastBuffer);
+      GnInternal.buffer = GnImageCreate(e.xconfigure.width, e.xconfigure.height);
+      GnInternal.lastBuffer = GnImageCreate(e.xconfigure.width, e.xconfigure.height);
+    }
     else if(e.type == KeyPress)
     {
       GnInternal.running = 0;
@@ -185,6 +203,8 @@ void GnCleanup()
   vector_delete(GnInternal.forms);
 
   GnImageDestroy(GnInternal.mediumMono);
+  GnImageDestroy(GnInternal.buffer);
+  GnImageDestroy(GnInternal.lastBuffer);
 
 #ifdef USE_SDL
   SDL_FreeSurface(GnUnsafe.buffer);

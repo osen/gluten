@@ -6,16 +6,26 @@
   #include <palloc.h>
 #endif
 
-#ifdef USE_SDL
+/*
 void set_pixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
 {
   Uint8 *target_pixel = (Uint8 *)surface->pixels + y * surface->pitch + x * 4;
   *(Uint32 *)target_pixel = pixel;
 }
-#endif
-#ifdef USE_X11
-  #include <X11/Xlib.h>
-#endif
+*/
+
+GnImage *GnImageCreate(int width, int height)
+{
+  GnImage *rtn = NULL;
+
+  rtn = palloc(GnImage);
+  rtn->width = width;
+  rtn->height = height;
+  rtn->rawData = vector_new(unsigned char);
+  vector_resize(rtn->rawData, width * height * 4);
+
+  return rtn;
+}
 
 GnImage *GnImageCreateFromString(char *str)
 {
@@ -23,10 +33,7 @@ GnImage *GnImageCreateFromString(char *str)
   unsigned error = 0;
   unsigned width = 0;
   unsigned height = 0;
-  int x = 0;
-  int y = 0;
   size_t i = 0;
-  int colorMod[3] = {GN_WIDGET_FOREGROUND};
 
   rtn = palloc(GnImage);
   rtn->rawData = vector_new(unsigned char);
@@ -54,36 +61,6 @@ GnImage *GnImageCreateFromString(char *str)
     vector_set(rtn->rawData, i, GnUnsafe.pngData[i]);
   }
 
-#ifdef USE_SDL
-  rtn->surface = SDL_CreateRGBSurface(0, width, height, 32,
-    GnUnsafe.buffer->format->Rmask,
-    GnUnsafe.buffer->format->Gmask,
-    GnUnsafe.buffer->format->Bmask,
-    GnUnsafe.buffer->format->Amask);
-
-  i = 0;
-
-  for(y = 0; y < height; y++)
-  {
-    for(x = 0; x < width; x++)
-    {
-      set_pixel(rtn->surface, x, y, SDL_MapRGBA(rtn->surface->format,
-        GnUnsafe.pngData[i] + colorMod[0], GnUnsafe.pngData[i+1] + colorMod[1], GnUnsafe.pngData[i+2] + colorMod[2], GnUnsafe.pngData[i+3]));
-      i+=4;
-    }
-  }
-#endif
-#ifdef USE_X11
-  rtn->img = XCreateImage(GnUnsafe.display, CopyFromParent, 24,
-    ZPixmap, 0, GnUnsafe.pngData, width, height, 32, 0);
-
-  rtn->p = XCreatePixmap(GnUnsafe.display, GnUnsafe.window,
-    width, height, 24);
-
-  XPutImage(GnUnsafe.display, rtn->p, GnUnsafe.gc, rtn->img,
-    0, 0, 0, 0, width, height);
-#endif
-
   free(GnUnsafe.pngData); GnUnsafe.pngData = NULL;
 
   return rtn;
@@ -91,9 +68,17 @@ GnImage *GnImageCreateFromString(char *str)
 
 void GnImageDestroy(GnImage *ctx)
 {
-#ifdef USE_SDL
-  SDL_FreeSurface(ctx->surface);
-#endif
   vector_delete(ctx->rawData);
   pfree(ctx);
 }
+
+int GnImageWidth(GnImage *ctx)
+{
+  return ctx->width;
+}
+
+int GnImageHeight(GnImage *ctx)
+{
+  return ctx->height;
+}
+

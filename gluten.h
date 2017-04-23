@@ -1933,6 +1933,8 @@ void GnEventDestroy(GnEvent *ctx);
   #include "Object.h"
 #endif
 
+struct GnImage;
+
 typedef struct GnDraw GnDraw;
 
 struct GnDraw
@@ -1953,6 +1955,8 @@ struct GnDraw
 };
 
 void GnDrawPixel(GnEvent *ctx, int x, int y, int r, int g, int b);
+
+void GnDrawImage(GnEvent *ctx, struct GnImage *img, int x, int y);
 
 void GnDrawFillRect(GnEvent *ctx, int x, int y, int width, int height,
   int r, int g, int b);
@@ -2106,7 +2110,10 @@ struct GnImage
 };
 
 GnImage *GnImageCreateFromString(char *str);
+GnImage *GnImageCreate(int width, int height);
 void GnImageDestroy(GnImage *ctx);
+int GnImageWidth(GnImage *ctx);
+int GnImageHeight(GnImage *ctx);
 
 #endif
 #ifndef GLUTEN_UTIL_H
@@ -2150,6 +2157,9 @@ struct GnInternal
   vector(GnWidget *) *forms;
   GnImage *mediumMono;
   GnWidget *activeForm;
+
+  GnImage *buffer;
+  GnImage *lastBuffer;
 };
 extern struct GnInternal GnInternal;
 

@@ -31,6 +31,9 @@ struct GnImage
 };
 
 GnImage *GnImageCreateFromString(char *str);
+GnImage *GnImageCreate(int width, int height);
 void GnImageDestroy(GnImage *ctx);
+int GnImageWidth(GnImage *ctx);
+int GnImageHeight(GnImage *ctx);
 
 #endif

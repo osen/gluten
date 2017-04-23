@@ -29,6 +29,9 @@ struct GnInternal
   vector(GnWidget *) *forms;
   GnImage *mediumMono;
   GnWidget *activeForm;
+
+  GnImage *buffer;
+  GnImage *lastBuffer;
 };
 extern struct GnInternal GnInternal;
 
