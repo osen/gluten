@@ -8,16 +8,19 @@
 struct GnImage;
 
 typedef struct GnDraw GnDraw;
+typedef struct GnBounds GnBounds;
+
+struct GnBounds
+{
+  int x;
+  int y;
+  int width;
+  int height;
+};
 
 struct GnDraw
 {
-  struct
-  {
-    int x;
-    int y;
-    int width;
-    int height;
-  } bounds;
+  GnBounds bounds;
 
   struct
   {

@@ -11,7 +11,7 @@
 #define GN_FORM_BACKGROUND 250, 250, 250, 255
 #define GN_WIDGET_BACKGROUND 100, 100, 200, 255
 #define GN_WIDGET_FOREGROUND 150, 200, 150, 255
-#define GN_WIDGET_BORDER 100, 100, 150, 255
+#define GN_WIDGET_BORDER 50, 50, 150, 255
 
 #endif
 #define AMALGAMATION
@@ -1936,16 +1936,19 @@ void GnEventDestroy(GnEvent *ctx);
 struct GnImage;
 
 typedef struct GnDraw GnDraw;
+typedef struct GnBounds GnBounds;
+
+struct GnBounds
+{
+  int x;
+  int y;
+  int width;
+  int height;
+};
 
 struct GnDraw
 {
-  struct
-  {
-    int x;
-    int y;
-    int width;
-    int height;
-  } bounds;
+  GnBounds bounds;
 
   struct
   {
@@ -1974,6 +1977,10 @@ typedef struct GnPosition GnPosition;
 void GnPositionInit(GnWidget *ctx, GnEvent *event);
 void GnWidgetSetPosition(GnWidget *ctx, int x, int y);
 void GnWidgetSetSize(GnWidget *ctx, int width, int height);
+int GnWidgetX(GnWidget *ctx);
+int GnWidgetY(GnWidget *ctx);
+int GnWidgetWidth(GnWidget *ctx);
+int GnWidgetHeight(GnWidget *ctx);
 
 struct GnPosition
 {
@@ -2086,13 +2093,6 @@ struct GnForm
   #include <vector.h>
 #endif
 
-#ifdef USE_SDL
-  #include <SDL/SDL.h>
-#endif
-#ifdef USE_X11
-  #include <X11/Xlib.h>
-#endif
-
 typedef struct GnImage GnImage;
 typedef struct GnColor GnColor;
 
@@ -2109,13 +2109,6 @@ struct GnImage
   vector(unsigned char) *rawData;
   int width;
   int height;
-#ifdef USE_SDL
-  SDL_Surface *surface;
-#endif
-#ifdef USE_X11
-  XImage *img;
-  Pixmap p;
-#endif
 };
 
 GnImage *GnImageCreateFromString(char *str);

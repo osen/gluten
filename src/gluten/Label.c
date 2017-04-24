@@ -11,21 +11,7 @@
 
 void GnLabelDraw(GnWidget *ctx, GnEvent *event)
 {
-  GnPosition *position = GnWidgetComponent(ctx, GnPosition);
-
-/*
-  SDL_Rect r = {0};
-  r.x = position->x;
-  r.y = position->y;
-  r.w = position->width;
-  r.h = position->height;
-
-  SDL_BlitSurface(GnInternal.mediumMono->surface, NULL, GnUnsafe.buffer, &r);
-*/
-  GnDrawFillRect(event, position->x + 5, position->y + 5,
-    position->width - 10, position->height - 10, GN_WIDGET_FOREGROUND);
-
-  GnDrawImage(event, GnInternal.mediumMono, position->x, position->y);
+  GnDrawImage(event, GnInternal.mediumMono, 0, 0);
 }
 
 void GnLabelSetText(GnWidget *ctx, char *text)

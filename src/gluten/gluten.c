@@ -195,6 +195,12 @@ void GnRun()
       GnInternal.running = 0;
       GnPropagateEvent("quit");
     }
+    else if(event.type == SDL_VIDEOEXPOSE)
+    {
+      GnPropagateEvent("draw");
+      SDL_BlitSurface(GnUnsafe.buffer, NULL, GnUnsafe.screen, NULL);
+      SDL_Flip(GnUnsafe.screen);
+    }
     else
     {
       GnPropagateEvent("draw");
@@ -233,6 +239,7 @@ void GnRun()
       GnImageDestroy(GnInternal.lastBuffer);
       GnInternal.buffer = GnImageCreate(e.xconfigure.width, e.xconfigure.height);
       GnInternal.lastBuffer = GnImageCreate(e.xconfigure.width, e.xconfigure.height);
+      GnPropagateEvent("size");
     }
     else if(e.type == KeyPress)
     {

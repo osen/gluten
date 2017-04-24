@@ -10,6 +10,10 @@ typedef struct GnPosition GnPosition;
 void GnPositionInit(GnWidget *ctx, GnEvent *event);
 void GnWidgetSetPosition(GnWidget *ctx, int x, int y);
 void GnWidgetSetSize(GnWidget *ctx, int width, int height);
+int GnWidgetX(GnWidget *ctx);
+int GnWidgetY(GnWidget *ctx);
+int GnWidgetWidth(GnWidget *ctx);
+int GnWidgetHeight(GnWidget *ctx);
 
 struct GnPosition
 {

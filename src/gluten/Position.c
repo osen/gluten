@@ -25,3 +25,31 @@ void GnWidgetSetSize(GnWidget *ctx, int width, int height)
   position->height = height;
 }
 
+int GnWidgetX(GnWidget *ctx)
+{
+  GnPosition *position = GnWidgetComponent(ctx, GnPosition);
+
+  return position->x;
+}
+
+int GnWidgetY(GnWidget *ctx)
+{
+  GnPosition *position = GnWidgetComponent(ctx, GnPosition);
+
+  return position->y;
+}
+
+int GnWidgetWidth(GnWidget *ctx)
+{
+  GnPosition *position = GnWidgetComponent(ctx, GnPosition);
+
+  return position->width;
+}
+
+int GnWidgetHeight(GnWidget *ctx)
+{
+  GnPosition *position = GnWidgetComponent(ctx, GnPosition);
+
+  return position->height;
+}
+

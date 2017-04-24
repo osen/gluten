@@ -8,7 +8,21 @@
 
 void GnDrawPixel(GnEvent *ctx, int x, int y, int r, int g, int b, int a)
 {
-  if(x >= GnImageWidth(GnInternal.buffer) || y >= GnImageHeight(GnInternal.buffer) ||
+  GnDraw *draw = GnEventComponent(ctx, GnDraw);
+
+  x += draw->bounds.x;
+  y += draw->bounds.y;
+
+  if(x < draw->bounds.x ||
+    x > draw->bounds.x + draw->bounds.width ||
+    y < draw->bounds.y ||
+    y > draw->bounds.y + draw->bounds.height)
+  {
+    return;
+  }
+
+  if(x >= GnImageWidth(GnInternal.buffer) ||
+    y >= GnImageHeight(GnInternal.buffer) ||
     x < 0 || y < 0)
   {
     return;

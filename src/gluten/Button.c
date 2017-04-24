@@ -1,6 +1,5 @@
 #ifndef AMALGAMATION
   #include "config.h"
-  #include "gluten.h"
   #include "Button.h"
   #include "Label.h"
   #include "Widget.h"
@@ -10,10 +9,11 @@
 
 void GnButtonDraw(GnWidget *ctx, GnEvent *event)
 {
-  GnPosition *position = GnWidgetComponent(ctx, GnPosition);
+  GnDrawFillRect(event, 0, 0,
+    GnWidgetWidth(ctx), GnWidgetHeight(ctx), GN_WIDGET_BORDER);
 
-  GnDrawFillRect(event, position->x, position->y,
-    position->width, position->height, GN_WIDGET_BACKGROUND);
+  GnDrawFillRect(event, 2, 2,
+    GnWidgetWidth(ctx) - 4, GnWidgetHeight(ctx) - 4, GN_WIDGET_BACKGROUND);
 }
 
 void GnButtonInit(GnWidget *ctx, GnEvent *event)

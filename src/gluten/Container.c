@@ -1,15 +1,27 @@
 #ifndef AMALGAMATION
   #include "Container.h"
   #include "Widget.h"
+  #include "Position.h"
+  #include "Draw.h"
+  #include "Event.h"
 #endif
 
 void GnContainerDraw(GnWidget *ctx, GnEvent *event)
 {
   size_t i = 0;
   GnContainer *container = GnWidgetComponent(ctx, GnContainer);
+  GnDraw *draw = GnEventComponent(event, GnDraw);
+  GnBounds bounds = draw->bounds;
 
   for(i = 0; i < vector_size(container->children); i++)
   {
+    GnWidget *child = vector_at(container->children, i);
+
+    draw->bounds = bounds;
+    draw->bounds.x += GnWidgetX(child);
+    draw->bounds.y += GnWidgetY(child);
+    draw->bounds.width = GnWidgetWidth(child);
+    draw->bounds.height = GnWidgetHeight(child);
     GnWidgetEvent(vector_at(container->children, i), "draw", event);
   }
 }
