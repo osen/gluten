@@ -82,3 +82,41 @@ int GnImageHeight(GnImage *ctx)
   return ctx->height;
 }
 
+GnColor GnImagePixel(GnImage *ctx, int x, int y)
+{
+  GnColor rtn = {0};
+  size_t i = 0;
+
+  if(x >= ctx->width || x < 0 || y >= ctx->height || y < 0)
+  {
+    printf("Error: Out of bounds of image\n");
+    return rtn;
+  }
+
+  i = y * ctx->width * 4 + x * 4;
+
+  rtn.r = vector_at(ctx->rawData, i);
+  rtn.g = vector_at(ctx->rawData, i + 1);
+  rtn.b = vector_at(ctx->rawData, i + 2);
+  rtn.a = vector_at(ctx->rawData, i + 3);
+
+  return rtn;
+}
+
+void GnImageSetPixel(GnImage *ctx, int x, int y, int r, int g, int b, int a)
+{
+  size_t i = 0;
+
+  if(x >= ctx->width || x < 0 || y >= ctx->height || y < 0)
+  {
+    printf("Error: Out of bounds of image\n");
+    return;
+  }
+
+  i = y * ctx->width * 4 + x * 4;
+
+  vector_set(ctx->rawData, i, r);
+  vector_set(ctx->rawData, i + 1, g);
+  vector_set(ctx->rawData, i + 2, b);
+  vector_set(ctx->rawData, i + 3, a);
+}

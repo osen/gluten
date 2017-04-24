@@ -26,11 +26,11 @@ struct GnDraw
   } offset;
 };
 
-void GnDrawPixel(GnEvent *ctx, int x, int y, int r, int g, int b);
+void GnDrawPixel(GnEvent *ctx, int x, int y, int r, int g, int b, int a);
 
 void GnDrawImage(GnEvent *ctx, struct GnImage *img, int x, int y);
 
 void GnDrawFillRect(GnEvent *ctx, int x, int y, int width, int height,
-  int r, int g, int b);
+  int r, int g, int b, int a);
 
 #endif

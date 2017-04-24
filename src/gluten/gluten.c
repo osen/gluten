@@ -90,7 +90,7 @@ void GnPropagateEvent(char *eventName)
 
   if(strcmp(eventName, "draw") == 0)
   {
-    GnDraw * draw = GnEventAddComponent(event, GnDraw);
+    GnDraw *draw = GnEventAddComponent(event, GnDraw);
     draw->bounds.width = GnImageWidth(GnInternal.buffer);
     draw->bounds.height = GnImageHeight(GnInternal.buffer);
   }
@@ -102,6 +102,52 @@ void GnPropagateEvent(char *eventName)
   for(i = 0; i < vector_size(GnInternal.forms); i++)
   {
     GnWidgetEvent(vector_at(GnInternal.forms, i), eventName, event);
+  }
+
+  if(strcmp(eventName, "draw") == 0)
+  {
+    size_t x = 0;
+    size_t y = 0;
+
+    for(y = 0; y < GnImageHeight(GnInternal.buffer); y++)
+    {
+      for(x = 0; x < GnImageWidth(GnInternal.buffer); x++)
+      {
+        GnColor a = GnImagePixel(GnInternal.buffer, x, y);
+        GnColor b = GnImagePixel(GnInternal.lastBuffer, x, y);
+
+        if(a.r != b.r || a.g != b.g || a.b != b.b || a.a != b.a)
+        {
+#ifdef USE_X11
+          if(GnUnsafe.r != a.r || GnUnsafe.g != a.g || GnUnsafe.b != a.b)
+          {
+            GnUnsafe.r = a.r;
+            GnUnsafe.g = a.g;
+            GnUnsafe.b = a.b;
+            XFreeColors(GnUnsafe.display, GnUnsafe.cmap, &GnUnsafe.color.pixel, 1, 0);
+            GnUnsafe.color.flags = DoRed | DoGreen | DoBlue;
+            GnUnsafe.color.red = (a.r / 255.0f) * 65535;
+            GnUnsafe.color.green = (a.g / 255.0f) * 65535;
+            GnUnsafe.color.blue = (a.b / 255.0f) * 65535;
+            XAllocColor(GnUnsafe.display, GnUnsafe.cmap, &GnUnsafe.color);
+            XSetForeground(GnUnsafe.display, GnUnsafe.gc, GnUnsafe.color.pixel);
+          }
+
+          XDrawPoint(GnUnsafe.display, GnUnsafe.window, GnUnsafe.gc, x, y);
+#endif
+#ifdef USE_SDL
+          SDL_Rect rect = {0};
+          rect.x = x;
+          rect.y = y;
+          rect.w = 1;
+          rect.h = 1;
+          SDL_FillRect(GnUnsafe.buffer, &rect,
+            SDL_MapRGB(GnUnsafe.buffer->format, a.r, a.g, a.b));
+#endif
+          GnImageSetPixel(GnInternal.lastBuffer, x, y, a.r, a.g, a.b, a.a);
+        }
+      }
+    }
   }
 
   GnEventDestroy(event);
@@ -122,7 +168,11 @@ void GnRun()
       break;
     }
 
-    if(event.type == SDL_VIDEORESIZE)
+    if(event.type == SDL_MOUSEMOTION)
+    {
+
+    }
+    else if(event.type == SDL_VIDEORESIZE)
     {
       GnUnsafe.screen = SDL_SetVideoMode(event.resize.w, event.resize.h, 32, SDL_SWSURFACE | SDL_RESIZABLE);
 
@@ -145,17 +195,19 @@ void GnRun()
       GnInternal.running = 0;
       GnPropagateEvent("quit");
     }
-
-    GnPropagateEvent("draw");
-
-    SDL_BlitSurface(GnUnsafe.buffer, NULL, GnUnsafe.screen, NULL);
-    SDL_Flip(GnUnsafe.screen);
+    else
+    {
+      GnPropagateEvent("draw");
+      SDL_BlitSurface(GnUnsafe.buffer, NULL, GnUnsafe.screen, NULL);
+      SDL_Flip(GnUnsafe.screen);
+    }
   }
 #endif
 #ifdef USE_X11
   do {
   Atom wmDeleteMessage = XInternAtom(GnUnsafe.display,
     "WM_DELETE_WINDOW", False);
+
   XSetWMProtocols(GnUnsafe.display, GnUnsafe.window, &wmDeleteMessage, 1);
 
   while(GnInternal.running)
@@ -166,6 +218,13 @@ void GnRun()
 
     if(e.type == Expose)
     {
+      /* TODO: Use e.xexpose.x, with, height, y to invalidate lastBuffer
+         section rather than clearing entire thing */
+      GnImageDestroy(GnInternal.lastBuffer);
+
+      GnInternal.lastBuffer = GnImageCreate(GnImageWidth(GnInternal.buffer),
+        GnImageHeight(GnInternal.buffer));
+
       GnPropagateEvent("draw");
     }
     else if(e.type == ConfigureNotify)

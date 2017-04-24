@@ -8,10 +8,10 @@
 */
 #define USE_X11
 
-#define GN_FORM_BACKGROUND 250, 250, 250
-#define GN_WIDGET_BACKGROUND 100, 100, 200
-#define GN_WIDGET_FOREGROUND 150, 200, 150
-#define GN_WIDGET_BORDER 100, 100, 150
+#define GN_FORM_BACKGROUND 250, 250, 250, 255
+#define GN_WIDGET_BACKGROUND 100, 100, 200, 255
+#define GN_WIDGET_FOREGROUND 150, 200, 150, 255
+#define GN_WIDGET_BORDER 100, 100, 150, 255
 
 #endif
 #define AMALGAMATION
@@ -1954,12 +1954,12 @@ struct GnDraw
   } offset;
 };
 
-void GnDrawPixel(GnEvent *ctx, int x, int y, int r, int g, int b);
+void GnDrawPixel(GnEvent *ctx, int x, int y, int r, int g, int b, int a);
 
 void GnDrawImage(GnEvent *ctx, struct GnImage *img, int x, int y);
 
 void GnDrawFillRect(GnEvent *ctx, int x, int y, int width, int height,
-  int r, int g, int b);
+  int r, int g, int b, int a);
 
 #endif
 #ifndef GLUTEN_POSITION_H
@@ -2094,6 +2094,15 @@ struct GnForm
 #endif
 
 typedef struct GnImage GnImage;
+typedef struct GnColor GnColor;
+
+struct GnColor
+{
+  int r;
+  int g;
+  int b;
+  int a;
+};
 
 struct GnImage
 {
@@ -2114,6 +2123,8 @@ GnImage *GnImageCreate(int width, int height);
 void GnImageDestroy(GnImage *ctx);
 int GnImageWidth(GnImage *ctx);
 int GnImageHeight(GnImage *ctx);
+GnColor GnImagePixel(GnImage *ctx, int x, int y);
+void GnImageSetPixel(GnImage *ctx, int x, int y, int r, int g, int b, int a);
 
 #endif
 #ifndef GLUTEN_UTIL_H

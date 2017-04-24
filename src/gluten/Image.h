@@ -15,6 +15,15 @@
 #endif
 
 typedef struct GnImage GnImage;
+typedef struct GnColor GnColor;
+
+struct GnColor
+{
+  int r;
+  int g;
+  int b;
+  int a;
+};
 
 struct GnImage
 {
@@ -35,5 +44,7 @@ GnImage *GnImageCreate(int width, int height);
 void GnImageDestroy(GnImage *ctx);
 int GnImageWidth(GnImage *ctx);
 int GnImageHeight(GnImage *ctx);
+GnColor GnImagePixel(GnImage *ctx, int x, int y);
+void GnImageSetPixel(GnImage *ctx, int x, int y, int r, int g, int b, int a);
 
 #endif

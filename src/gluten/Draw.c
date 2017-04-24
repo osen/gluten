@@ -6,40 +6,46 @@
   #include "gluten.h"
 #endif
 
-void GnDrawPixel(GnEvent *ctx, int x, int y, int r, int g, int b)
+void GnDrawPixel(GnEvent *ctx, int x, int y, int r, int g, int b, int a)
 {
-#ifdef USE_X11
-  if(GnUnsafe.r != r || GnUnsafe.g != g || GnUnsafe.b != b)
+  if(x >= GnImageWidth(GnInternal.buffer) || y >= GnImageHeight(GnInternal.buffer) ||
+    x < 0 || y < 0)
   {
-    GnUnsafe.r = r;
-    GnUnsafe.g = g;
-    GnUnsafe.b = b;
-    XFreeColors(GnUnsafe.display, GnUnsafe.cmap, &GnUnsafe.color.pixel, 1, 0);
-    GnUnsafe.color.flags = DoRed | DoGreen | DoBlue;
-    GnUnsafe.color.red = (r / 255.0f) * 65535;
-    GnUnsafe.color.green = (g / 255.0f) * 65535;
-    GnUnsafe.color.blue = (b / 255.0f) * 65535;
-    XAllocColor(GnUnsafe.display, GnUnsafe.cmap, &GnUnsafe.color);
-    XSetForeground(GnUnsafe.display, GnUnsafe.gc, GnUnsafe.color.pixel);
-    /*printf("Changing color\n");*/
+    return;
   }
 
-  XDrawPoint(GnUnsafe.display, GnUnsafe.window, GnUnsafe.gc,
-    x, y);
-#endif
-#ifdef USE_SDL
-  SDL_Rect rect = {0};
-  rect.x = x;
-  rect.y = y;
-  rect.w = 1;
-  rect.h = 1;
-  SDL_FillRect(GnUnsafe.buffer, &rect,
-    SDL_MapRGB(GnUnsafe.buffer->format, r, g, b));
-#endif
+  if(a != 255)
+  {
+    GnColor curr = {0};
+    float opacity = (float)a / 255.0f;
+    float tr = r;
+    float tg = g;
+    float tb = b;
+
+    curr = GnImagePixel(GnInternal.buffer, x, y);
+    tr = (float)curr.r + tr * opacity;
+    tg = (float)curr.g + tg * opacity;
+    tb = (float)curr.b + tb * opacity;
+
+    tr /= (1.0f + opacity);
+    tg /= (1.0f + opacity);
+    tb /= (1.0f + opacity);
+
+    if(tr > 255) tr = 255;
+    if(tg > 255) tg = 255;
+    if(tb > 255) tb = 255;
+
+    r = tr;
+    g = tg;
+    b = tb;
+    a = 255;
+  }
+
+  GnImageSetPixel(GnInternal.buffer, x, y, r, g, b, a);
 }
 
 void GnDrawFillRect(GnEvent *ctx, int x, int y, int width, int height,
-  int r, int g, int b)
+  int r, int g, int b, int a)
 {
   size_t xi = 0;
   size_t yi = 0;
@@ -48,7 +54,7 @@ void GnDrawFillRect(GnEvent *ctx, int x, int y, int width, int height,
   {
     for(xi = 0; xi < width; xi++)
     {
-      GnDrawPixel(ctx, x + xi, y + yi, r, g, b);
+      GnDrawPixel(ctx, x + xi, y + yi, r, g, b, a);
     }
   }
 }
@@ -66,7 +72,7 @@ void GnDrawImage(GnEvent *ctx, struct GnImage *img, int x, int y)
       GnDrawPixel(ctx, x + xi, y + yi, 
         vector_at(img->rawData, i),
         vector_at(img->rawData, i + 1),
-        /*vector_at(img->rawData, i + 2));*/
+        vector_at(img->rawData, i + 2),
         vector_at(img->rawData, i + 3));
 
       i+=4;
