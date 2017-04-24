@@ -12,6 +12,14 @@
 void GnDrawPixel(GnEvent *ctx, int x, int y, int r, int g, int b, int a)
 {
   GnDraw *draw = GnEventComponent(ctx, GnDraw);
+  GnColor curr = {0};
+  int rdiff = 0;
+  int gdiff = 0;
+  int bdiff = 0;
+  float rstep = 0;
+  float gstep = 0;
+  float bstep = 0;
+  float opacity = 0;
 
   x += draw->bounds.x;
   y += draw->bounds.y;
@@ -33,28 +41,19 @@ void GnDrawPixel(GnEvent *ctx, int x, int y, int r, int g, int b, int a)
 
   if(a != 255)
   {
-    GnColor curr = {0};
-    float opacity = (float)a / 255.0f;
-    float tr = r;
-    float tg = g;
-    float tb = b;
-
+    opacity = ((float)a / 255.0f * 100.0f);
     curr = GnImagePixel(GnInternal.buffer, x, y);
-    tr = (float)curr.r + tr * opacity;
-    tg = (float)curr.g + tg * opacity;
-    tb = (float)curr.b + tb * opacity;
+    rdiff = r - curr.r;
+    gdiff = g - curr.g;
+    bdiff = b - curr.b;
 
-    tr /= (1.0f + opacity);
-    tg /= (1.0f + opacity);
-    tb /= (1.0f + opacity);
+    rstep = (float)rdiff / 100.0f;
+    gstep = (float)gdiff / 100.0f;
+    bstep = (float)bdiff / 100.0f;
 
-    if(tr > 255) tr = 255;
-    if(tg > 255) tg = 255;
-    if(tb > 255) tb = 255;
-
-    r = tr;
-    g = tg;
-    b = tb;
+    r = curr.r + rstep * opacity;
+    g = curr.g + gstep * opacity;
+    b = curr.b + bstep * opacity;
     a = 255;
   }
 
@@ -82,6 +81,7 @@ void GnDrawText(GnEvent *ctx, struct GnFont *font, int x, int y, char *text)
   size_t yi = 0;
   size_t i = 0;
   int colMod[4] = {GN_WIDGET_FOREGROUND};
+  /*int colMod[4] = {0};*/
 
   for(i = 0; i < strlen(text); i++)
   {
