@@ -21,6 +21,7 @@ struct GnPosition
   int y;
   int width;
   int height;
+  int dirty;
 };
 
 #endif
