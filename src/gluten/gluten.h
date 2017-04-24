@@ -11,6 +11,7 @@
   #include "Button.h"
   #include "Label.h"
   #include "Image.h"
+  #include "Font.h"
   #include "Event.h"
   #include "Object.h"
   #include <vector.h>
@@ -28,6 +29,7 @@ struct GnInternal
   int running;
   vector(GnWidget *) *forms;
   GnImage *mediumMono;
+  GnFont *mediumMonoFont;
   GnWidget *activeForm;
 
   GnImage *buffer;

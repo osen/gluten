@@ -2,9 +2,12 @@
   #include "Draw.h"
   #include "Image.h"
   #include "Event.h"
+  #include "Font.h"
   #include "config.h"
   #include "gluten.h"
 #endif
+
+#include <string.h>
 
 void GnDrawPixel(GnEvent *ctx, int x, int y, int r, int g, int b, int a)
 {
@@ -73,6 +76,39 @@ void GnDrawFillRect(GnEvent *ctx, int x, int y, int width, int height,
   }
 }
 
+void GnDrawText(GnEvent *ctx, struct GnFont *font, int x, int y, char *text)
+{
+  size_t xi = 0;
+  size_t yi = 0;
+  size_t i = 0;
+  int colMod[4] = {GN_WIDGET_FOREGROUND};
+
+  for(i = 0; i < strlen(text); i++)
+  {
+    GnGlyph g = GnFontGlyph(font, text[i]);
+    GnImage *img = g.img;
+
+    if(!img)
+    {
+      printf("Failed to find glyph\n");
+      return;
+    }
+
+    for(yi = 0; yi < g.height; yi++)
+    {
+      for(xi = 0; xi < g.width; xi++)
+      {
+        GnColor col = GnImagePixel(img, g.x + xi, g.y + yi);
+
+        GnDrawPixel(ctx, x + xi, y + yi,
+          col.r + colMod[0], col.g + colMod[1], col.b + colMod[2], col.a);
+      }
+    }
+
+    x += g.width + 1;
+  }
+}
+
 void GnDrawImage(GnEvent *ctx, struct GnImage *img, int x, int y)
 {
   size_t xi = 0;
@@ -83,7 +119,7 @@ void GnDrawImage(GnEvent *ctx, struct GnImage *img, int x, int y)
   {
     for(xi = 0; xi < img->width; xi++)
     {
-      GnDrawPixel(ctx, x + xi, y + yi, 
+      GnDrawPixel(ctx, x + xi, y + yi,
         vector_at(img->rawData, i),
         vector_at(img->rawData, i + 1),
         vector_at(img->rawData, i + 2),

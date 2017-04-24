@@ -23,6 +23,7 @@ cat src/gluten/Button.h >> gluten.h
 cat src/gluten/Label.h >> gluten.h
 cat src/gluten/Container.h >> gluten.h
 cat src/gluten/Form.h >> gluten.h
+cat src/gluten/Font.h >> gluten.h
 cat src/gluten/Image.h >> gluten.h
 cat src/gluten/util.h >> gluten.h
 cat src/gluten/gluten.h >> gluten.h
@@ -39,6 +40,7 @@ cat src/gluten/Label.c >> gluten.c
 cat src/gluten/Anchor.c >> gluten.c
 cat src/gluten/Form.c >> gluten.c
 cat src/gluten/Image.c >> gluten.c
+cat src/gluten/Font.c >> gluten.c
 cat src/gluten/Position.c >> gluten.c
 cat src/gluten/data.h >> gluten.c
 cat src/gluten/gluten.c >> gluten.c

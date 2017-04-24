@@ -67,6 +67,7 @@ int GnInit(int argc, char **argv, char *layout)
   GnInternal.forms = vector_new(GnWidget *);
 
   GnInternal.mediumMono = GnImageCreateFromString(mediumMono);
+  GnInternal.mediumMonoFont = GnFontCreateFromString(mediumMono);
 
   GnInternal.buffer = GnImageCreate(GN_INITIAL_WIDTH, GN_INITIAL_HEIGHT);
   GnInternal.lastBuffer = GnImageCreate(GN_INITIAL_WIDTH, GN_INITIAL_HEIGHT);
@@ -268,6 +269,7 @@ void GnCleanup()
 
   vector_delete(GnInternal.forms);
 
+  GnFontDestroy(GnInternal.mediumMonoFont);
   GnImageDestroy(GnInternal.mediumMono);
   GnImageDestroy(GnInternal.buffer);
   GnImageDestroy(GnInternal.lastBuffer);

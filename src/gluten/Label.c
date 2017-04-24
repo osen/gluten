@@ -11,7 +11,11 @@
 
 void GnLabelDraw(GnWidget *ctx, GnEvent *event)
 {
-  GnDrawImage(event, GnInternal.mediumMono, 0, 0);
+/*
+  GnLabel *label = GnWidgetComponent(ctx, GnLabel);
+  GnDrawText(event, GnInternal.mediumMonoFont, 0, 0, label->text);
+*/
+  GnDrawText(event, GnInternal.mediumMonoFont, 0, 0, "Close");
 }
 
 void GnLabelSetText(GnWidget *ctx, char *text)

@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
   testLabel = GnWidgetCreate(GnLabel);
   GnLabelSetText(testLabel, "This is a test label");
   GnWidgetSetPosition(testLabel, 200, 10);
-  GnWidgetSetSize(testLabel, 50, 200);
+  GnWidgetSetSize(testLabel, 700, 200);
   GnContainerAdd(loginForm, testLabel);
 
   GnWidgetAddEvent(closeButton, "click", OnCloseButtonClicked);

@@ -1934,6 +1934,7 @@ void GnEventDestroy(GnEvent *ctx);
 #endif
 
 struct GnImage;
+struct GnFont;
 
 typedef struct GnDraw GnDraw;
 typedef struct GnBounds GnBounds;
@@ -1963,6 +1964,8 @@ void GnDrawImage(GnEvent *ctx, struct GnImage *img, int x, int y);
 
 void GnDrawFillRect(GnEvent *ctx, int x, int y, int width, int height,
   int r, int g, int b, int a);
+
+void GnDrawText(GnEvent *ctx, struct GnFont *font, int x, int y, char *text);
 
 #endif
 #ifndef GLUTEN_POSITION_H
@@ -2084,6 +2087,41 @@ struct GnForm
 };
 
 #endif
+#ifndef GLUTEN_FONT_H
+#define GLUTEN_FONT_H
+
+#ifndef AMALGAMATION
+  #include <vector.h>
+#endif
+
+struct GnImage;
+typedef struct GnFont GnFont;
+typedef struct GnGlyph GnGlyph;
+
+/* Escaped characters " and \ */
+static const char *characters = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+
+struct GnGlyph
+{
+  char c;
+  int x;
+  int y;
+  int width;
+  int height;
+  struct GnImage *img;
+};
+
+struct GnFont
+{
+  struct GnImage *img;
+  vector(struct GnGlyph) *glyphs;
+};
+
+GnFont *GnFontCreateFromString(char *data);
+void GnFontDestroy(GnFont *ctx);
+GnGlyph GnFontGlyph(GnFont *ctx, char c);
+
+#endif
 #ifndef GLUTEN_IMAGE_H
 #define GLUTEN_IMAGE_H
 
@@ -2143,6 +2181,7 @@ void GnHexArrayFromString(char *input, vector(unsigned char) *output);
   #include "Button.h"
   #include "Label.h"
   #include "Image.h"
+  #include "Font.h"
   #include "Event.h"
   #include "Object.h"
   #include <vector.h>
@@ -2160,6 +2199,7 @@ struct GnInternal
   int running;
   vector(GnWidget *) *forms;
   GnImage *mediumMono;
+  GnFont *mediumMonoFont;
   GnWidget *activeForm;
 
   GnImage *buffer;
