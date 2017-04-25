@@ -21,6 +21,7 @@ struct GnBounds
 
 struct GnDraw
 {
+  int dirty;
   GnBounds bounds;
 
   struct

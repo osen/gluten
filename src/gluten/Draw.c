@@ -58,6 +58,7 @@ void GnDrawPixel(GnEvent *ctx, int x, int y, int r, int g, int b, int a)
   }
 
   GnImageSetPixel(GnInternal.buffer, x, y, r, g, b, a);
+  draw->dirty = 1;
 }
 
 void GnDrawFillRect(GnEvent *ctx, int x, int y, int width, int height,

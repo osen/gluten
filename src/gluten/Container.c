@@ -6,7 +6,7 @@
   #include "Event.h"
 #endif
 
-void GnContainerDraw(GnWidget *ctx, GnEvent *event)
+void GnContainerRequestDraw(GnWidget *ctx, GnEvent *event)
 {
   size_t i = 0;
   GnContainer *container = GnWidgetComponent(ctx, GnContainer);
@@ -22,8 +22,10 @@ void GnContainerDraw(GnWidget *ctx, GnEvent *event)
     draw->bounds.y += GnWidgetY(child);
     draw->bounds.width = GnWidgetWidth(child);
     draw->bounds.height = GnWidgetHeight(child);
-    GnWidgetEvent(vector_at(container->children, i), "draw", event);
+    GnWidgetEvent(vector_at(container->children, i), "request_draw", event);
   }
+
+  draw->bounds = bounds;
 }
 
 void GnContainerSize(GnWidget *ctx, GnEvent *event)
@@ -54,7 +56,7 @@ void GnContainerInit(GnWidget *ctx, GnEvent *event)
 {
   GnContainer *container = GnWidgetComponent(ctx, GnContainer);
   container->children = vector_new(GnWidget *);
-  GnWidgetAddEvent(ctx, "draw", GnContainerDraw);
+  GnWidgetAddEvent(ctx, "request_draw", GnContainerRequestDraw);
   GnWidgetAddEvent(ctx, "size", GnContainerSize);
   GnWidgetAddEvent(ctx, "destroy", GnContainerDestroy);
 }

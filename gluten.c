@@ -7,7 +7,7 @@
   #include "Event.h"
 #endif
 
-void GnContainerDraw(GnWidget *ctx, GnEvent *event)
+void GnContainerRequestDraw(GnWidget *ctx, GnEvent *event)
 {
   size_t i = 0;
   GnContainer *container = GnWidgetComponent(ctx, GnContainer);
@@ -23,8 +23,10 @@ void GnContainerDraw(GnWidget *ctx, GnEvent *event)
     draw->bounds.y += GnWidgetY(child);
     draw->bounds.width = GnWidgetWidth(child);
     draw->bounds.height = GnWidgetHeight(child);
-    GnWidgetEvent(vector_at(container->children, i), "draw", event);
+    GnWidgetEvent(vector_at(container->children, i), "request_draw", event);
   }
+
+  draw->bounds = bounds;
 }
 
 void GnContainerSize(GnWidget *ctx, GnEvent *event)
@@ -55,7 +57,7 @@ void GnContainerInit(GnWidget *ctx, GnEvent *event)
 {
   GnContainer *container = GnWidgetComponent(ctx, GnContainer);
   container->children = vector_new(GnWidget *);
-  GnWidgetAddEvent(ctx, "draw", GnContainerDraw);
+  GnWidgetAddEvent(ctx, "request_draw", GnContainerRequestDraw);
   GnWidgetAddEvent(ctx, "size", GnContainerSize);
   GnWidgetAddEvent(ctx, "destroy", GnContainerDestroy);
 }
@@ -275,6 +277,7 @@ void GnDrawPixel(GnEvent *ctx, int x, int y, int r, int g, int b, int a)
   }
 
   GnImageSetPixel(GnInternal.buffer, x, y, r, g, b, a);
+  draw->dirty = 1;
 }
 
 void GnDrawFillRect(GnEvent *ctx, int x, int y, int width, int height,
@@ -749,6 +752,7 @@ void GnWidgetSetPosition(GnWidget *ctx, int x, int y)
 
   position->x = x;
   position->y = y;
+  position->dirty = 1;
 }
 
 void GnWidgetSetSize(GnWidget *ctx, int width, int height)
@@ -757,6 +761,9 @@ void GnWidgetSetSize(GnWidget *ctx, int width, int height)
 
   position->width = width;
   position->height = height;
+  position->dirty = 1;
+
+  /* TODO: Send size event */
 }
 
 int GnWidgetX(GnWidget *ctx)
@@ -841,17 +848,6 @@ int GnInit(int argc, char **argv, char *layout)
   XSelectInput(GnUnsafe.display, GnUnsafe.window, ExposureMask | KeyPressMask | StructureNotifyMask);
   XMapWindow(GnUnsafe.display, GnUnsafe.window);
   GnUnsafe.gc = DefaultGC(GnUnsafe.display, GnUnsafe.screen);
-/*
-  XGCValues gcvalues = {0};
-  GnUnsafe.gc = XCreateGC(GnUnsafe.display, GnUnsafe.window, 0, &gcvalues);
-*/
-  GnUnsafe.cmap = XDefaultColormap(GnUnsafe.display, GnUnsafe.screen);
-  GnUnsafe.color.flags = DoRed | DoGreen | DoBlue;
-  GnUnsafe.color.red = 00000;
-  GnUnsafe.color.green = 00000;
-  GnUnsafe.color.blue = 00000;
-  XAllocColor(GnUnsafe.display, GnUnsafe.cmap, &GnUnsafe.color);
-  XSetForeground(GnUnsafe.display, GnUnsafe.gc, GnUnsafe.color.pixel);
 #endif
 
   GnInternal.forms = vector_new(GnWidget *);
@@ -872,6 +868,26 @@ void GnSubmitModifiedPixels(int force)
   size_t x = 0;
   size_t y = 0;
 
+#ifdef USE_X11
+  int xr = 0;
+  int xg = 0;
+  int xb = 0;
+  GnUnsafe.cmap = XDefaultColormap(GnUnsafe.display, GnUnsafe.screen);
+  GnUnsafe.color.flags = DoRed | DoGreen | DoBlue;
+  GnUnsafe.color.red = 00000;
+  GnUnsafe.color.green = 00000;
+  GnUnsafe.color.blue = 00000;
+  XAllocColor(GnUnsafe.display, GnUnsafe.cmap, &GnUnsafe.color);
+  XSetForeground(GnUnsafe.display, GnUnsafe.gc, GnUnsafe.color.pixel);
+#endif
+
+#ifdef USE_SDL
+  if(SDL_MUSTLOCK(GnUnsafe.buffer))
+  {
+    SDL_LockSurface(GnUnsafe.buffer);
+  }
+#endif
+
   for(y = 0; y < GnImageHeight(GnInternal.buffer); y++)
   {
     for(x = 0; x < GnImageWidth(GnInternal.buffer); x++)
@@ -882,11 +898,11 @@ void GnSubmitModifiedPixels(int force)
       if(force != 0 || a.r != b.r || a.g != b.g || a.b != b.b || a.a != b.a)
       {
 #ifdef USE_X11
-        if(GnUnsafe.r != a.r || GnUnsafe.g != a.g || GnUnsafe.b != a.b)
+        if(xr != a.r || xg != a.g || xb != a.b)
         {
-          GnUnsafe.r = a.r;
-          GnUnsafe.g = a.g;
-          GnUnsafe.b = a.b;
+          xr = a.r;
+          xg = a.g;
+          xb = a.b;
           XFreeColors(GnUnsafe.display, GnUnsafe.cmap, &GnUnsafe.color.pixel, 1, 0);
           GnUnsafe.color.flags = DoRed | DoGreen | DoBlue;
           GnUnsafe.color.red = (a.r / 255.0f) * 65535;
@@ -899,6 +915,7 @@ void GnSubmitModifiedPixels(int force)
         XDrawPoint(GnUnsafe.display, GnUnsafe.window, GnUnsafe.gc, x, y);
 #endif
 #ifdef USE_SDL
+/*
         SDL_Rect rect = {0};
         rect.x = x;
         rect.y = y;
@@ -906,6 +923,11 @@ void GnSubmitModifiedPixels(int force)
         rect.h = 1;
         SDL_FillRect(GnUnsafe.buffer, &rect,
           SDL_MapRGB(GnUnsafe.buffer->format, a.r, a.g, a.b));
+*/
+        Uint32 color = SDL_MapRGB(GnUnsafe.buffer->format, a.r, a.g, a.b);
+        Uint8 *pixel = (Uint8*)GnUnsafe.buffer->pixels;
+        pixel += (y * GnUnsafe.buffer->pitch) + (x * sizeof(Uint32));
+        *((Uint32*)pixel) = color;
 #endif
         GnImageSetPixel(GnInternal.lastBuffer, x, y, a.r, a.g, a.b, a.a);
       }
@@ -913,8 +935,16 @@ void GnSubmitModifiedPixels(int force)
   }
 
 #ifdef USE_SDL
+  if(SDL_MUSTLOCK(GnUnsafe.buffer))
+  {
+    SDL_UnlockSurface(GnUnsafe.buffer);
+  }
+
   SDL_BlitSurface(GnUnsafe.buffer, NULL, GnUnsafe.screen, NULL);
   SDL_Flip(GnUnsafe.screen);
+#endif
+#ifdef USE_X11
+  XFreeColors(GnUnsafe.display, GnUnsafe.cmap, &GnUnsafe.color.pixel, 1, 0);
 #endif
 }
 
@@ -948,7 +978,13 @@ void GnPropagateEvent(char *eventName)
 
   if(strcmp(eventName, "request_draw") == 0)
   {
-    GnSubmitModifiedPixels(0);
+    GnDraw *draw = GnEventComponent(event, GnDraw);
+
+    if(draw->dirty)
+    {
+      GnSubmitModifiedPixels(0);
+      draw->dirty = 0;
+    }
   }
 
   GnEventDestroy(event);
@@ -1009,49 +1045,50 @@ void GnRun()
   }
 #endif
 #ifdef USE_X11
-  do {
-  Atom wmDeleteMessage = XInternAtom(GnUnsafe.display,
-    "WM_DELETE_WINDOW", False);
-
-  XSetWMProtocols(GnUnsafe.display, GnUnsafe.window, &wmDeleteMessage, 1);
-
-  while(GnInternal.running)
+  do
   {
-    XEvent e = {0};
+    Atom wmDeleteMessage = XInternAtom(GnUnsafe.display,
+      "WM_DELETE_WINDOW", False);
 
-    XNextEvent(GnUnsafe.display, &e);
+    XSetWMProtocols(GnUnsafe.display, GnUnsafe.window, &wmDeleteMessage, 1);
 
-    if(e.type == Expose)
+    while(GnInternal.running)
     {
-      /* TODO: Use e.xexpose.x, with, height, y to invalidate lastBuffer
-         section rather than clearing entire thing */
-      GnSubmitModifiedPixels(1);
-    }
-    else if(e.type == ConfigureNotify)
-    {
-      if(GnImageWidth(GnInternal.buffer) != e.xconfigure.width ||
-        GnImageHeight(GnInternal.buffer) != e.xconfigure.height)
+      XEvent e = {0};
+
+      XNextEvent(GnUnsafe.display, &e);
+
+      if(e.type == Expose)
       {
-        GnImageDestroy(GnInternal.buffer);
-        GnImageDestroy(GnInternal.lastBuffer);
-        GnInternal.buffer = GnImageCreate(e.xconfigure.width, e.xconfigure.height);
-        GnInternal.lastBuffer = GnImageCreate(e.xconfigure.width, e.xconfigure.height);
-        GnPropagateEvent("size");
-        GnPropagateEvent("request_draw");
+        /* TODO: Use e.xexpose.x, with, height, y to invalidate lastBuffer
+           section rather than clearing entire thing */
+        GnSubmitModifiedPixels(1);
       }
-    }
-    else if(e.type == KeyPress)
-    {
-      GnInternal.running = 0;
-    }
-    else if(e.type == ClientMessage)
-    {
-      if(e.xclient.data.l[0] == wmDeleteMessage)
+      else if(e.type == ConfigureNotify)
+      {
+        if(GnImageWidth(GnInternal.buffer) != e.xconfigure.width ||
+          GnImageHeight(GnInternal.buffer) != e.xconfigure.height)
+        {
+          GnImageDestroy(GnInternal.buffer);
+          GnImageDestroy(GnInternal.lastBuffer);
+          GnInternal.buffer = GnImageCreate(e.xconfigure.width, e.xconfigure.height);
+          GnInternal.lastBuffer = GnImageCreate(e.xconfigure.width, e.xconfigure.height);
+          GnPropagateEvent("size");
+          GnPropagateEvent("request_draw");
+        }
+      }
+      else if(e.type == KeyPress)
       {
         GnInternal.running = 0;
       }
+      else if(e.type == ClientMessage)
+      {
+        if(e.xclient.data.l[0] == wmDeleteMessage)
+        {
+          GnInternal.running = 0;
+        }
+      }
     }
-  }
   } while(0);
 #endif
 }

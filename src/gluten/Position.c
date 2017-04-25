@@ -39,6 +39,7 @@ void GnWidgetSetPosition(GnWidget *ctx, int x, int y)
 
   position->x = x;
   position->y = y;
+  position->dirty = 1;
 }
 
 void GnWidgetSetSize(GnWidget *ctx, int width, int height)
@@ -47,6 +48,9 @@ void GnWidgetSetSize(GnWidget *ctx, int width, int height)
 
   position->width = width;
   position->height = height;
+  position->dirty = 1;
+
+  /* TODO: Send size event */
 }
 
 int GnWidgetX(GnWidget *ctx)

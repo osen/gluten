@@ -1949,6 +1949,7 @@ struct GnBounds
 
 struct GnDraw
 {
+  int dirty;
   GnBounds bounds;
 
   struct
@@ -2223,7 +2224,6 @@ struct GnUnsafe
   GC gc;
   Colormap cmap;
   XColor color;
-  int r; int g; int b;
 #endif
 };
 extern struct GnUnsafe GnUnsafe;
